@@ -1,0 +1,30 @@
+{
+    "version": "x.x.x",
+    "mapLayers": {
+      "baseLayers": [
+        {
+          "name": "National Geographic",
+          "layer": "NationalGeographic",
+          "url": "",
+          "type": "agsbase",
+          "visible": false
+        },
+        {
+          "name": "Streets",
+          "layer": "Streets",
+          "url": "",
+          "type": "agsbase",
+          "visible": true
+        },
+        {
+          "name": "Topographic",
+          "layer": "Topographic",
+          "url": "",
+          "type": "agsbase",
+          "visible": false
+        }
+      ],
+      "overlays": [
+      ]
+    }
+  }
