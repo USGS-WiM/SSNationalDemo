@@ -1,7 +1,7 @@
 ![WiM](wimlogo.png)
 
 
-# Travel Time
+# SS National Demo
 
 A web-based map application for estimating plume trajectories and travel times in rivers
 
@@ -31,7 +31,7 @@ Navigate to `http://localhost:4200/`. The app will automatically reload if you c
 
 ## Deployment
 
-Run `ng build` to build a deployed project. Configureation has now moved to angular.json file
+Run `ng build --prod --base-href` to build a deployed project. Configuration has now moved to angular.json file
 
 see [CLI build](https://github.com/angular/angular-cli/wiki/build) for additional options.
 

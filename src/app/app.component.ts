@@ -10,10 +10,10 @@ import {AboutModalComponent} from './components/about/about.component'
 })
 
 export class AppComponent {
-  public title:string;
+  public title: string;
 
   constructor(config: NgbModalConfig, private modalService: NgbModal) {
-   this.title = "USGS Time of Travel";
+   this.title = "SS National Demo";
 
     config.backdrop = 'static';
     config.keyboard = false;

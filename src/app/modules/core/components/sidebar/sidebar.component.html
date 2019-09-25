@@ -2,30 +2,6 @@
     <div>Current Zoom {{ZoomLevel}}</div>
     <mat-accordion>
       <mat-expansion-panel [(ngModel)]="PanelData[0]" [expanded]="false" [disabled]="false" ngDefaultControl>
-        <mat-expansion-panel-header>
-          MAP LAYERS
-        </mat-expansion-panel-header>
-
-        <mat-bar-button [options]="maplayerButton_natgeo"
-                        (btnClick)="SetLayer('National Geographic')">
-        </mat-bar-button>
-
-        <mat-bar-button [options]="maplayerButton_osm"
-                        (btnClick)="SetLayer('Open Street Map')">
-        </mat-bar-button>
-
-        <mat-bar-button [options]="maplayerButton_texas"
-                        (btnClick)="SetOverlay('Texas')">
-        </mat-bar-button>
-
-        <mat-bar-button [options]="maplayerButton_topo"
-                        (btnClick)="SetLayer('Topographic')">
-        </mat-bar-button>
-
-        <mat-bar-button [options]="maplayerButton_points"
-                        (btnClick)="SetOverlay('Regulation Points')">
-        </mat-bar-button>
-
       </mat-expansion-panel>
 
       <mat-expansion-panel [(ngModel)]="PanelData[1]" [expanded]="true" [disabled]="false" ngDefaultControl> <!--*ngFor="let p of PanelData"-->  
@@ -59,8 +35,6 @@
           <mat-expansion-panel-header (click)="SetProcedureType(2)">
               SCENARIOS
             </mat-expansion-panel-header>
-
-        <button mat-raised-button (click)="openDialog()">Jobsons</button>
       </mat-expansion-panel>
 
       <mat-expansion-panel [(ngModel)]="PanelData[3]" [expanded]="false" [disabled]="true" ngDefaultControl>     

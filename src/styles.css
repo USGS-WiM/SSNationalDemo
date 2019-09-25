@@ -5230,3 +5230,8 @@ ul {
 .leaflet-control-layers {
   visibility: hidden !important;
 }
+
+
+#toast-container .wait{
+    background-image: url('https://wim.usgs.gov/website-assets/branding/usgsanimated.svg');
+}

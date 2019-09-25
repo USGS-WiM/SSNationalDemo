@@ -9,7 +9,7 @@ export class ErrorDialogComponent {
   title = 'Angular-Interceptor';
   constructor(
     public dialogRef: MatDialogRef<ErrorDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: string    
+    @Inject(MAT_DIALOG_DATA) public data
   ) { }
 
   closeDialog() {

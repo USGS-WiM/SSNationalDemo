@@ -1,6 +1,5 @@
-* {  
-    min-height: 850px;
-    margin-top: 20px;
-    right: 0px;
-    position: relative;
+* {
+  height: 970px;
+  margin-top: 20px;
+  cursor: pointer;
 }

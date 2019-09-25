@@ -3,17 +3,19 @@ import { NgModule } from '@angular/core';
 import { AppComponent } from './app.component';
 import { AboutModalComponent } from './components/about/about.component';
 import { NavbarComponent} from './components/navbar/navbar.component';
-import {NgbTabsetModule,NgbModule,NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
+import {NgbTabsetModule, NgbModule, NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
 import {ToastrModule, ToastNoAnimation, ToastNoAnimationModule} from 'ngx-toastr';
 import { CoreModule } from './modules/core/core.module';
 import { HttpClientModule } from '@angular/common/http';
 import { NavigationService } from './modules/core/services/navigationservices.service';
+import { ErrorDialogComponent } from './shared/components/error-dialog/error-dialog.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     AboutModalComponent,
-    NavbarComponent
+    NavbarComponent,
+    ErrorDialogComponent
   ],
   imports: [
     BrowserModule,
@@ -23,9 +25,9 @@ import { NavigationService } from './modules/core/services/navigationservices.se
     ToastNoAnimationModule.forRoot({
       timeOut: 5000,
       positionClass: 'toast-bottom-right',
-      progressAnimation:'decreasing',
+      progressAnimation: 'decreasing',
       preventDuplicates: true,
-      countDuplicates:true
+      countDuplicates: true
     }),
     NgbModule.forRoot()
   ],
