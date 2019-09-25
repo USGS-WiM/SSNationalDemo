@@ -1,7 +1,7 @@
 <div leaflet
       [leafletOptions]="MapOptions"
+      [leafletFitBounds]="FitBounds"
+      [leafletLayers]="Layers"
       [leafletLayersControl]="LayersControl"
-
-      (leafletMapReady)="onMapReady($event)"
       (leafletZoomChange)="onZoomChange($event)"
       (leafletClick)="onMouseClick($event)"></div>

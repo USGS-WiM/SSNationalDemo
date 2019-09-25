@@ -1,50 +1,43 @@
 {
-    "version": "x.x.x",
-    "mapLayers": {
-      "baseLayers": [
+    "version" : "x.x.x",
+    "mapLayers":{
+      "baseLayers":[
         {
-          "name": "Open Street Map",
-          "url": "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-          "layerOptions": {
-            "maxZoom": 18,
-            "attribution": "..."
-          },
-          "type": "tile",
-          "visible": false
-        },
-        {
-          "name": "National Geographic",
+          "name":"National Geographic",
           "layer": "NationalGeographic",
-          "url": "http://services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}",
-          "type": "tile",
+          "type": "agsbase",
+          "visible" : false
+        },
+        {
+          "name":"Open Street Map",
+          "url":"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+          "layerOptions": { "maxZoom": 18, "attribution": "..." },
+          "type":"tile",
           "visible": false
         },
         {
-          "name": "Streets",
+          "name":"Streets",
           "layer": "Streets",
-          "url": "http://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
-          "type": "tile",
-          "visible": false
+          "type": "agsbase",
+          "visible" :false
         },
         {
-          "name": "Topographic",
+          "name":"Topographic",
           "layer": "Topographic",
-          "url": "http://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
-          "type": "tile",
-          "visible": true
+          "type": "agsbase",
+          "visible" : true
         }
       ],
-      "overlays": [
+      "overlayLayers":[
         {
           "name": "Texas",
-          "layer": "TexasHydro",
-          "url": "https://txgeo.usgs.gov/arcgis/rest/services/Mapping/HydroBaseMapForTerrain/MapServer/tile/{z}/{y}/{x}",
-          "type": "overlay",
+          "url": "https://txgeo.usgs.gov/arcgis/rest/services/Mapping/HydroBaseMapForTerrain/MapServer",
+          "type": "agsTile",
           "layerOptions": {
-            "maxZoom": 11,
-            "minZoom": 5,
-            "attribution": "Texas Streamer Esri product",
-            "zIndex": 1
+            "opacity": 0.6,
+              "maxZoom": 10,
+              "zIndex": 9999,
+              "useCors":false
           },
           "visible": true
         }

@@ -142,15 +142,6 @@ export class SidebarComponent {
      }
    }
 
-  //#maplayer "basemaps"
-  private SetLayer(LayerName: string) {
-    this.MapService.interactwBaselayer(LayerName);
-  }
-
-  private SetOverlay(LayerName: string) {
-    this.MapService.interactwOverlayer(LayerName);
-  }
-
   //#region "Methods"
   public SetScenarioType(ScenarioType:string) {
     if (ScenarioType = "Response") {

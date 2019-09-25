@@ -1,128 +1,140 @@
 import { Injectable, ElementRef, EventEmitter, Injector } from '@angular/core';
 import * as L from 'leaflet';
+import { Map } from 'leaflet';
 import * as esri from 'esri-leaflet';
 import { HttpClient } from '@angular/common/http';
-import { ToastrService, IndividualConfig } from 'ngx-toastr';
-export interface layerControl{
-  baseLayers:any;
-  overlays:any
+import { Observable, of, Subject } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { ToastrService } from 'ngx-toastr';
+export interface layerControl {
+  baseLayers: Array<any>;
+  overlays: Array<any>
 }
 @Injectable()
 export class MapService {
 
+  public Options: L.MapOptions;
   // for layers that will show up in the leaflet control
-  // public layersControl: layerControl = { baseLayers: {}, overlays: {} };
-    // any; //
+  public LayersControl: Subject<layerControl> = new Subject<any>();
+  private _layersControl: layerControl = { baseLayers: [], overlays: []};
   public CurrentZoomLevel;
-  public myurl;
-  public layers;
-  public options: L.MapOptions;
-  public layersControl: layerControl = { baseLayers: {}, overlays: {} };
-  public map: L.Map; // reference to the object
   public markerGroup: L.FeatureGroup<any>;
   private messanger: ToastrService;
+  public FitBounds: L.LatLngBounds;
 
-  constructor(public http: HttpClient, toastr: ToastrService) {
-    this.options = {
-      layers: [],
-      zoom: 5,
-      center: L.latLng(39.828, -98.5795)
-    };
+  constructor(http: HttpClient, toastr: ToastrService) {
+
+    this.Options = {
+        zoom: 5,
+        center: L.latLng(39.828, -98.5795)
+      };
 
     this.messanger = toastr;
-  }
 
-  public onMapReady(map) {
-    this.map = map;
-    this.http.get('assets/config.json').subscribe(data => {
-      const conf: any = data;      // load baselayers
+    this.markerGroup = new L.FeatureGroup([]);
 
+    http.get('assets/config.json').subscribe(data => {
+
+      //load baselayers
+      var conf:any = data;
       conf.mapLayers.baseLayers.forEach(ml => {
-        if (ml.visible) {
-            if (ml.type === 'agsbase') { //esri layers special case
-                this.layersControl.baseLayers[ml.name] = esri.basemapLayer(ml.layer);
-            } else {
-              this.layersControl.baseLayers[ml.name] = this.loadBaselayer(ml);
-            }
-          }
+        ml.layer = this.loadLayer(ml);
+        if (ml.layer != null)
+          this._layersControl.baseLayers.push(ml);
       });
-
-      conf.mapLayers.overlays.forEach(ml => {
-        if (ml.visible) {
-            if (ml.type === "agsDynamic") {//esri layers special case
-              ml.layerOptions['url'] = ml.url;
-              this.layersControl.overlays[ml.name] = esri.dynamicMapLayer(ml.layerOptions)
-            } else {
-                this.layersControl.overlays[ml.name] = this.loadOverlaylayer(ml);
-            }
-        }
+      conf.mapLayers.overlayLayers.forEach(ml => {
+        ml.layer =this.loadLayer(ml);
+        if(ml.layer != null)
+          this._layersControl.overlays.push(ml);
       });
-
-      this.CurrentZoomLevel = 8;
+      this.LayersControl.next(this._layersControl);
     });
-    this.markerGroup = new L.FeatureGroup([]).addTo(this.map);
+
+    
+    this.CurrentZoomLevel = this.Options.zoom;
+  }
+  
+  public AddLayer(point:any) {
+    //this is just and example of how to add layers
+    var newlayer = {
+      name:'Big Circle',
+      layer:L.circle(point, { radius: 5000 }), 
+      visible:true
+    };
+    var ml = this._layersControl.overlays.find((l: any) => (l.name === newlayer.name ));
+    if(ml != null) ml.layer = newlayer.layer;
+    else this._layersControl.overlays.push(newlayer); 
+
+    //Notify subscribers
+    this.LayersControl.next(this._layersControl);
   }
 
-  private loadBaselayer(ml): L.Layer { // baselayers method
-    let layer: L.Layer = null;
-    switch (ml.type) {
-      case 'agsbase':
-        layer = esri.basemapLayer(ml.layer); // ml.layer = NationalGeographic
-        break;
-      case 'tile':
-        layer = L.tileLayer(ml.url, ml.layerOptions);
-    }// end switch
-    if (this.options.layers.length > 0) { } else {
-      layer.addTo(this.map);
+  public ToggleLayerVisibility(layername:string) {
+    var ml = this._layersControl.overlays.find((l:any)=> (l.name === layername))
+    if (!ml) return;
+
+    if(ml.visible) ml.visible= false;
+    else ml.visible = true;
+    console.log("visibility toggled");
+    this.LayersControl.next(this._layersControl);
+  }
+
+  private loadLayer(ml):L.Layer{
+    try { 
+      switch (ml.type) {
+        case 'agsbase':
+          return esri.basemapLayer(ml.layer);
+        
+        case 'tile':
+          //https://leafletjs.com/reference-1.5.0.html#tilelayer
+          return L.tileLayer(ml.url, ml.layerOptions);
+          
+        case 'agsDynamic':
+          //https://esri.github.io/esri-leaflet/api-reference/layers/dynamic-map-layer.html
+          var options = ml.layerOptions;
+          options.url = ml.url;
+          return esri.dynamicMapLayer(options);
+        case 'agsTile':
+            var options = ml.layerOptions;
+            options.url = ml.url;
+            return esri.tiledMapLayer(options);
+        default:
+          console.warn ("No condition exists for maplayers of type ", ml.type, "see config maplayer for: "+ml.name)
+
+            
+        }//end switch
+    } catch (error) {
+        console.error(ml.name + " failed to load mapllayer", error)
+        return null;
     }
-    return layer;
+
   }
-
-  private loadOverlaylayer(ml): L.Layer { // overlays method
-    let layer: L.Layer = null;
-    switch (ml.type) {
-      case 'overlay':
-        layer = L.tileLayer(ml.url, ml.layerOptions); // ml.layerOptions
-    } // end switch
-    return layer;
-  }
-
-  public interactwOverlayer(LayerName: string) {
-
-    if (this.map.hasLayer(this.layersControl.overlays[LayerName])) {
-      this.map.removeLayer(this.layersControl.overlays[LayerName]);
-    } else {
-      this.map.addLayer(this.layersControl.overlays[LayerName]);
-    }
-  }
-
-  public interactwBaselayer(LayerName: string) {
-
-    if (this.map.hasLayer(this.layersControl.baseLayers[LayerName])) {
-      this.map.removeLayer(this.layersControl.baseLayers[LayerName]);
-    } else {
-      this.map.addLayer(this.layersControl.baseLayers[LayerName]);
-    }
-  }
-
-  public changeCursor(cursorType) {
-    // L.DomUtil.addClass(._container,'crosshair-cursor-enabled');
-  }
-
   public addPoint(latlng) {
-    if (this.map.hasLayer(this.layersControl.overlays['basin'])) {
-        this.map.removeLayer(this.layersControl.overlays['basin']);
-    }
-    if (this.markerGroup) {this.markerGroup.clearLayers(); }
-    L.marker(latlng).addTo(this.markerGroup);
+    this.addToMap(L.marker(latlng), 'marker');
+  }
+
+  public addToMap(lay, layerName: any) {
+    const newlayer = {
+      name: layerName,
+      layer: lay,
+      visible: true
+    };
+    const ml = this._layersControl.overlays.find((l: any) => (l.name === newlayer.name ));
+    if (ml != null) { ml.layer = newlayer.layer;
+    } else { this._layersControl.overlays.push(newlayer); }
+
+    // Notify subscribers
+    this.LayersControl.next(this._layersControl);
   }
 
   public addCollection(obj) {
     const layer = L.geoJSON(obj);
-    this.layersControl.overlays['basin'] = layer;
-    this.map.addLayer(this.layersControl.overlays['basin']);
+    this.addToMap(layer, 'basin');
 
-    this.map.fitBounds(layer.getBounds());
+   /*  delete this.Options.zoom;
+    delete this.Options.center; */
+    this.FitBounds = layer.getBounds();
+    // this.map.fitBounds(layer.getBounds());
     if (this.messanger) {this.messanger.clear(); }
   }
 }
