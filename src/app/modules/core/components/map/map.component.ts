@@ -99,8 +99,11 @@ export class MapComponent extends deepCopy implements OnInit {
         this.messanger.show('Loading, please wait', '', {disableTimeOut: true}, 'wait');
         this.NavigationService.getComid(event.latlng.lng, event.latlng.lat).subscribe(result => {
             if (result[0]) {
+                const startTime = new Date().getTime();
                 this.NavigationService.getBasin(result[0].COMID).subscribe(collection => {
                     this.MapService.addCollection(collection);
+                    const loadTime = (new Date().getTime() - startTime) / 1000;
+                    this.sm('Basin load time: ' + loadTime + ' seconds', messageType.INFO, '', 10000);
                 });
             } else {
                 this.messanger.clear();
