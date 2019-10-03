@@ -18,7 +18,6 @@ export class MapService {
   public LayersControl: Subject<layerControl> = new Subject<any>();
   private _layersControl: layerControl = { baseLayers: [], overlays: []};
   public CurrentZoomLevel;
-  public markerGroup: L.FeatureGroup<any>;
   private messanger: ToastrService;
   public FitBounds: L.LatLngBounds;
 
@@ -30,8 +29,6 @@ export class MapService {
       };
 
     this.messanger = toastr;
-
-    this.markerGroup = new L.FeatureGroup([]);
 
     http.get('assets/config.json').subscribe(data => {
 
@@ -109,9 +106,6 @@ export class MapService {
     }
 
   }
-  public addPoint(latlng) {
-    this.addToMap(L.marker(latlng), 'marker');
-  }
 
   public addToMap(lay, layerName: any) {
     const newlayer = {
@@ -127,14 +121,15 @@ export class MapService {
     this.LayersControl.next(this._layersControl);
   }
 
+  public removeLayer(layerName: any) {
+    const idx = this._layersControl.overlays.findIndex((l: any) => (l.name === layerName ));
+    if (idx > -1) {this._layersControl.overlays.splice(idx, 1); }
+  }
+
   public addCollection(obj) {
     const layer = L.geoJSON(obj);
     this.addToMap(layer, 'basin');
 
-   /*  delete this.Options.zoom;
-    delete this.Options.center; */
     this.FitBounds = layer.getBounds();
-    // this.map.fitBounds(layer.getBounds());
-    if (this.messanger) {this.messanger.clear(); }
   }
 }

@@ -19,7 +19,7 @@ export class AppComponent {
     config.keyboard = false;
    }
 //#region "Methods"
-  public open(){
+  public open() {
     const modalRef = this.modalService.open(AboutModalComponent);
     modalRef.componentInstance.title = 'About';
   }

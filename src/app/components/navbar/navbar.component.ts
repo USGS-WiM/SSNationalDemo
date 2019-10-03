@@ -11,7 +11,7 @@ export class NavbarComponent implements OnInit {
 
   ngOnInit() {
   }
-  public toggleSidebar(){
+  public toggleSidebar() {
     // //should allow sidebar to go in and come back out
     // var sidebar = document.getElementById("wimSidebar");
     // if (sidebar.style.display === "none") {
@@ -19,5 +19,5 @@ export class NavbarComponent implements OnInit {
     // } else {
     //     sidebar.style.display = "none";
     // }
-  } 
+  }
 }
