@@ -3,7 +3,7 @@
 
 # SS National Demo
 
-A web-based map application for estimating plume trajectories and travel times in rivers
+A demo app to test the potential of a national streamstats app
 
 ### Prerequisites
 
