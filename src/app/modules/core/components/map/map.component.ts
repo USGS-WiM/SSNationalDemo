@@ -83,7 +83,7 @@ export class MapComponent extends deepCopy implements OnInit {
     this.MapService.ToggleLayerVisibility('Big Circle');
   }
 
-  //#region "Helper methods"
+  // region "Helper methods"
   private sm(msg: string, mType: string = messageType.INFO, title?: string, timeout?: number) {
     try {
       let options: Partial<IndividualConfig> = null;
@@ -94,18 +94,22 @@ export class MapComponent extends deepCopy implements OnInit {
       this.messanger.show(msg, title, options, mType);
     } catch (e) {}
   }
-  //#endregion
+  // endregion
 
   public onMouseClick(event) {
     const startTime = new Date().getTime();
     this.addPoint(event.latlng);
-    const popup = this.marker.getPopup(); const popupContent = String(popup.getContent());
+    const popup = this.marker.getPopup(); let popupContent = String(popup.getContent());
     this.messanger.clear();
-    this.sm('Loading basin, please wait', 'wait', '', 60000);
+    this.sm('Loading basin, please wait...', 'wait', '', 60000);
     this.NavigationService.getComid(event.latlng.lng, event.latlng.lat).subscribe(result => {
       if (result[0]) {
-        // update popup with comid
-        popup.setContent(popupContent.replace('N/A', result[0].COMID));
+        const bsn = result[0];
+        // update popup with returned properties
+        popupContent = popupContent.replace('N/A', bsn.COMID).split('</div>')[0] +
+            '<br><b>Drainage Area:</b> ' + bsn.DrainageArea + '<br><b>Slope:</b> ' + bsn.Slope + '<br><b>Length:</b> ' +
+            bsn.Length + '<br><b>Discharge:</b> ' + bsn.Discharge + '<br><b>Velocity:</b> ' + bsn.Velocity + '</div>';
+        popup.setContent(popupContent);
         popup.update();
 
         this.NavigationService.getBasin(result[0].COMID).subscribe(collection => {
@@ -125,7 +129,7 @@ export class MapComponent extends deepCopy implements OnInit {
 
   public addPoint(latlng) {
     this.MapService.removeLayer('basin');
-    const content = '<div>Latitude: ' + latlng.lat + '<br>Longitude: ' + latlng.lng + '<br>Comid: N/A</div>';
+    const content = '<div><b>Latitude:</b> ' + latlng.lat + '<br><b>Longitude:</b> ' + latlng.lng + '<br><b>Comid:</b> N/A</div>';
     this.marker = L.marker(latlng).bindPopup(content);
     this.MapService.addToMap(this.marker, 'marker');
   }
