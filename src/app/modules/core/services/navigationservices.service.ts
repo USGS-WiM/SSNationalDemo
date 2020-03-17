@@ -77,4 +77,11 @@ export class NavigationService {
       .get(url)
       .pipe(catchError(this.handleError('getNavigationResource', [])));
   }
+
+  public getBasinLocal(long, lat, region) {
+      const url = 'http://127.0.0.1:5000/delineate?region=' + region + '&lng=' + long + '&lat=' + lat;
+      return this.http
+        .get(url)
+        .pipe(catchError(this.handleError('getNavigationResource', [])));
+  }
 }

@@ -16,9 +16,11 @@ export class MapService {
   // for layers that will show up in the leaflet control
   public LayersControl: Subject<layerControl> = new Subject<any>();
   private _layersControl: layerControl = { baseLayers: [], overlays: [] };
+  public StreamGridLayer: Subject<L.esri.DynamicMapLayer> = new Subject<L.esri.DynamicMapLayer>();
   public CurrentZoomLevel;
   private messanger: ToastrService;
   public FitBounds: L.LatLngBounds;
+  public config: any;
 
   constructor(http: HttpClient, toastr: ToastrService) {
     this.Options = {
@@ -30,12 +32,12 @@ export class MapService {
 
     http.get('assets/config.json').subscribe(data => {
       // load baselayers
-      const conf: any = data;
-      conf.mapLayers.baseLayers.forEach(ml => {
+      this.config = data;
+      this.config.mapLayers.baseLayers.forEach(ml => {
         ml.layer = this.loadLayer(ml);
         if (ml.layer != null) { this._layersControl.baseLayers.push(ml); }
       });
-      conf.mapLayers.overlayLayers.forEach(ml => {
+      this.config.mapLayers.overlayLayers.forEach(ml => {
         ml.layer = this.loadLayer(ml);
         if (ml.layer != null) { this._layersControl.overlays.push(ml); }
       });
@@ -89,7 +91,9 @@ export class MapService {
           // https://esri.github.io/esri-leaflet/api-reference/layers/dynamic-map-layer.html
           options = ml.layerOptions;
           options.url = ml.url;
-          return esri.dynamicMapLayer(options);
+          const gridLayer = esri.dynamicMapLayer(options);
+          this.StreamGridLayer.next(gridLayer);
+          return gridLayer;
         case 'agsTile':
           options = ml.layerOptions;
           options.url = ml.url;
@@ -131,10 +135,45 @@ export class MapService {
     }
   }
 
-  public addCollection(obj) {
-    const layer = L.geoJSON(obj);
-    this.addToMap(layer, 'basin');
+  public addCollection(obj, name, mergedCatchmentExists) {
+    let layer;
+    // this.addToMap(layer, 'basin' + name);
 
-    this.FitBounds = layer.getBounds();
+    switch (name) {
+        case 'splitCatchment':
+            layer = L.geoJSON(obj, { style: {
+                    fillColor: 'yellow',
+                    weight: 2,
+                    opacity: 1,
+                    color: 'yellow',
+                    fillOpacity: 0.7
+                }});
+            break;
+        case 'adjointCatchment':
+            layer = L.geoJSON(obj, {style: {
+                fillColor: 'red',
+                weight: 2,
+                opacity: 1,
+                color: 'red',
+                fillOpacity: 0.7
+            }});
+            break;
+        case 'mergedCatchment':
+            layer = L.geoJSON(obj, {style: {
+                fillColor: 'blue',
+                weight: 2,
+                opacity: 1,
+                color: 'blue',
+                fillOpacity: 0.2
+            }});
+            break;
+        default:
+            layer = L.geoJSON(obj);
+            name = 'basin' + name;
+    }
+
+    this.addToMap(layer, name);
+
+    if (name === 'mergedCatchment' || !mergedCatchmentExists) { this.FitBounds = layer.getBounds(); }
   }
 }

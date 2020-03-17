@@ -32,6 +32,8 @@ export class MapComponent extends deepCopy implements OnInit {
   private methodType: string = null;
   public innerHeight = window.innerHeight;
   public marker: L.Marker;
+  public streamGridLayer: L.esri.DynamicMapLayer;
+  public map: L.Map;
 
   private _layersControl;
   public get LayersControl() {
@@ -76,6 +78,14 @@ export class MapComponent extends deepCopy implements OnInit {
       activelayers.unshift(data.baseLayers.find((l: any) => l.visible).layer);
       this._layers = activelayers;
     });
+
+    this.MapService.StreamGridLayer.subscribe(layer => {
+        this.streamGridLayer = layer;
+    })
+  }
+
+  public onMapReady(map: L.Map) {
+    this.map = map;
   }
 
   public onZoomChange(zoom: number) {
@@ -98,11 +108,59 @@ export class MapComponent extends deepCopy implements OnInit {
 
   public onMouseClick(event) {
     const startTime = new Date().getTime();
+    console.log(event.latlng);
+    // add point to map
     this.addPoint(event.latlng);
     const popup = this.marker.getPopup(); let popupContent = String(popup.getContent());
     this.messanger.clear();
+
+    // get region name
+    let region = ''; const self = this;
+    const config = this.MapService.config["streamGridLayers"];
+    const layers = config["layers"].join(',');
+    this.streamGridLayer.identify().on(this.map).at(event.latlng).returnGeometry(false).tolerance(5).layers('visible:' + layers)
+        .run(function (error, featureCollection, response) {
+            console.log(response)
+            if (error) {
+                console.log(error);
+                return;
+            }
+            if (response.results[0].attributes['Pixel Value'] === '1') {
+
+                const layerId = config.layers.indexOf(response.results[0].layerId);
+                region = config.regions[layerId];
+
+            }
+            else {
+                self.messanger.warning('Please click on a stream cell');
+            }
+
+            if (region != '') {
+                self.getBasin(event.latlng, region, startTime, popupContent, popup);
+            }
+            
+        });
+  }
+
+  getBasin(latlng, region, startTime, popupContent, popup) {
+
     this.sm('Loading basin, please wait...', 'wait', '', 60000);
-    this.NavigationService.getComid(event.latlng.lng, event.latlng.lat).subscribe(result => {
+    this.NavigationService.getBasinLocal(latlng.lng, latlng.lat, region).subscribe((result: object) => {
+        console.log(result);
+        if (result) {
+            this.messanger.clear();
+            const loadTime = (new Date().getTime() - startTime) / 1000;
+            this.sm('Basin load time: ' + loadTime + ' seconds', messageType.INFO, '', 10000);
+            Object.keys(result).forEach((item) => {
+                this.MapService.addCollection(result[item], item, result['mergedCatchment'] != null);
+            })
+        } else {
+            this.messanger.clear();
+            this.sm('No basin returned', 'error');
+            this.marker.openPopup();
+        }
+    })
+    this.NavigationService.getComid(latlng.lng, latlng.lat).subscribe(result => {
       if (result[0]) {
         const bsn = result[0];
         // update popup with returned properties
@@ -111,18 +169,6 @@ export class MapComponent extends deepCopy implements OnInit {
             bsn.Length + '<br><b>Discharge:</b> ' + bsn.Discharge + '<br><b>Velocity:</b> ' + bsn.Velocity + '</div>';
         popup.setContent(popupContent);
         popup.update();
-
-        this.NavigationService.getBasin(result[0].COMID).subscribe(collection => {
-          this.MapService.addCollection(collection);
-          this.messanger.clear();
-          const loadTime = (new Date().getTime() - startTime) / 1000;
-          this.sm('Basin load time: ' + loadTime + ' seconds', messageType.INFO, '', 10000);
-          this.marker.openPopup();
-        });
-      } else {
-        this.messanger.clear();
-        this.sm('No basin returned', 'error');
-        this.marker.openPopup();
       }
     });
   }
