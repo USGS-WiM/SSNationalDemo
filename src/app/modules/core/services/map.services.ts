@@ -3,7 +3,7 @@ import * as L from 'leaflet';
 import { Map } from 'leaflet';
 import * as esri from 'esri-leaflet';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of, Subject } from 'rxjs';
+import { Observable, of, Subject, BehaviorSubject } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ToastrService } from 'ngx-toastr';
 export interface layerControl {
@@ -17,6 +17,7 @@ export class MapService {
   public LayersControl: Subject<layerControl> = new Subject<any>();
   private _layersControl: layerControl = { baseLayers: [], overlays: [] };
   public StreamGridLayer: Subject<L.esri.DynamicMapLayer> = new Subject<L.esri.DynamicMapLayer>();
+  public StateService: BehaviorSubject<any> = new BehaviorSubject<any>(undefined);
   public CurrentZoomLevel;
   private messanger: ToastrService;
   public FitBounds: L.LatLngBounds;
@@ -43,6 +44,10 @@ export class MapService {
       });
       this.LayersControl.next(this._layersControl);
     });
+
+    http.get('https://gis.streamstats.usgs.gov/arcgis/rest/services/StreamStats/stateServices/MapServer?f=pjson').subscribe(data => {
+        this.StateService.next(data);
+    })
 
     this.CurrentZoomLevel = this.Options.zoom;
   }

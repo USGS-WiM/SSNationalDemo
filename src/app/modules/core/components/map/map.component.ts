@@ -32,8 +32,10 @@ export class MapComponent extends deepCopy implements OnInit {
   private methodType: string = null;
   public innerHeight = window.innerHeight;
   public marker: L.Marker;
-  public streamGridLayer: L.esri.DynamicMapLayer;
+  public streamGridLayer: esri.DynamicMapLayer;
   public map: L.Map;
+  public stateService;
+  public selectedRegion = null;
 
   private _layersControl;
   public get LayersControl() {
@@ -81,7 +83,12 @@ export class MapComponent extends deepCopy implements OnInit {
 
     this.MapService.StreamGridLayer.subscribe(layer => {
         this.streamGridLayer = layer;
-    })
+    });
+
+    this.MapService.StateService.subscribe(data => {
+        this.stateService = data;
+    });
+
   }
 
   public onMapReady(map: L.Map) {
@@ -91,6 +98,47 @@ export class MapComponent extends deepCopy implements OnInit {
   public onZoomChange(zoom: number) {
     this.MapService.CurrentZoomLevel = zoom;
     this.MapService.ToggleLayerVisibility('Big Circle');
+    // if zoom is past level 15 (and different than last zoom), check if more than one region is showing
+    // if more than one region showing, have user select which region
+    if (zoom >= 15 && !(this.streamGridLayer.getLayers().length === 2 || this.streamGridLayer.getLayers().length === 1)) {
+        // map identify task, see if layers exist within bounds of map
+        const self = this; const queriedLayers = []; const regions = []; let selectedRegion;
+        this.streamGridLayer.identify().on(this.map).at(this.map.getBounds()).returnGeometry(false)
+            .run((error, featureCollection, response) => {
+                if (error) {
+                    console.log(error);
+                    return;
+                }
+
+                // this could probably be done better in a 'find' function, like like 118
+                for (const i of response.results) {
+                    for (const l of self.stateService.layers) {
+                        if (l.name === 'StreamGrid' && l.id === i.layerId && queriedLayers.indexOf(l.parentLayerId) === -1) {
+                            queriedLayers.push(l.parentLayerId);
+                            // add parent layer ID to regions
+                            regions.push(self.stateService.layers.find(lay => lay.id === l.parentLayerId).name);
+                        }
+                    }
+                }
+
+                // if only one region showing, use that, otherwise ask user to choose
+                if (regions.length === 1) {
+                    self.selectedRegion = regions[0];
+                } else {
+                    self.selectedRegion = prompt('Which region: ' + regions.join(', '));
+                }
+
+                const newIdx = regions.indexOf(selectedRegion);
+                self.streamGridLayer.setLayers([queriedLayers[newIdx]]);
+        });
+    }
+
+    if (zoom < 15 && this.streamGridLayer.getLayers().length <= 2) {
+        // if user zooms out higher than 15, reset layers
+        // the user might not want this, since it would remove all exclusion polys after delineation, but I'm not sure how else to do this
+        this.streamGridLayer.setLayers([]);
+        this.selectedRegion = null;
+    }
   }
 
   // region "Helper methods"
@@ -107,38 +155,30 @@ export class MapComponent extends deepCopy implements OnInit {
   // endregion
 
   public onMouseClick(event) {
+    if (this.map.getZoom() < 15) {
+        return;
+    }
     const startTime = new Date().getTime();
-    console.log(event.latlng);
     // add point to map
     this.addPoint(event.latlng);
     const popup = this.marker.getPopup(); let popupContent = String(popup.getContent());
     this.messanger.clear();
 
     // get region name
-    let region = ''; const self = this;
-    const config = this.MapService.config["streamGridLayers"];
-    const layers = config["layers"].join(',');
-    this.streamGridLayer.identify().on(this.map).at(event.latlng).returnGeometry(false).tolerance(5).layers('visible:' + layers)
-        .run(function (error, featureCollection, response) {
-            console.log(response)
+    const self = this; const layers = this.streamGridLayer.getLayers();
+
+    // check if click was on a stream cell
+    this.streamGridLayer.identify().on(this.map).at(event.latlng).returnGeometry(false).tolerance(5).layers('visible:' + layers[0])
+        .run((error, featureCollection, response) => {
             if (error) {
                 console.log(error);
                 return;
             }
-            if (response.results[0].attributes['Pixel Value'] === '1') {
-
-                const layerId = config.layers.indexOf(response.results[0].layerId);
-                region = config.regions[layerId];
-
-            }
-            else {
+            if (response.results[0].attributes['Pixel Value'] !== '1') {
                 self.messanger.warning('Please click on a stream cell');
+            } else {
+                self.getBasin(event.latlng, self.selectedRegion, startTime, popupContent, popup);
             }
-
-            if (region != '') {
-                self.getBasin(event.latlng, region, startTime, popupContent, popup);
-            }
-            
         });
   }
 
@@ -152,7 +192,11 @@ export class MapComponent extends deepCopy implements OnInit {
             const loadTime = (new Date().getTime() - startTime) / 1000;
             this.sm('Basin load time: ' + loadTime + ' seconds', messageType.INFO, '', 10000);
             Object.keys(result).forEach((item) => {
-                this.MapService.addCollection(result[item], item, result['mergedCatchment'] != null);
+                if (result[item] != null && result[item].geometry.coordinates.length > 0) {
+                    if (!result[item].geometry || result[item].geometry.coordinates.length > 0) {
+                        this.MapService.addCollection(result[item], item, result['mergedCatchment'] != null);
+                    }
+                }
             })
         } else {
             this.messanger.clear();
