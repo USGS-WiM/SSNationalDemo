@@ -72,7 +72,7 @@ export class NavigationService {
   }
 
   public getBasin(comID): Observable<any> {
-    const url = 'https://cida.usgs.gov/nldi/comid/' + comID + '/basin';
+    const url = 'https://labs.waterdata.usgs.gov/api/nldi/linked-data/comid/' + comID + '/basin';
     return this.http
       .get(url)
       .pipe(catchError(this.handleError('getNavigationResource', [])));
