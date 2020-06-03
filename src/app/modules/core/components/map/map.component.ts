@@ -32,6 +32,8 @@ export class MapComponent extends deepCopy implements OnInit {
   private methodType: string = null;
   public innerHeight = window.innerHeight;
   public marker: L.Marker;
+  public map: L.Map;
+  public selectedLayers = new L.FeatureGroup();
 
   private _layersControl;
   public get LayersControl() {
@@ -80,7 +82,26 @@ export class MapComponent extends deepCopy implements OnInit {
 
   public onZoomChange(zoom: number) {
     this.MapService.CurrentZoomLevel = zoom;
+    document.getElementById('zoomLevel').innerHTML = 'Zoom Level: ' + zoom;
     this.MapService.ToggleLayerVisibility('Big Circle');
+  }
+
+  public onMapReady(map: L.Map) {
+    this.map = map;
+    this.selectedLayers.addTo(map);
+    L.control.scale().addTo(map);
+    const zoomInfo = new (L.Control.extend({
+        options: {position: 'bottomleft'}
+    }));
+    const self = this;
+    zoomInfo.onAdd = function() {
+        this._div = L.DomUtil.create('div', 'zoom-level');
+        this._div.innerHTML = 'Zoom Level: ' + self.MapService.CurrentZoomLevel;
+        this._div.id = 'zoomLevel';
+        return this._div;
+    };
+
+    zoomInfo.addTo(this.map);
   }
 
   // region "Helper methods"
@@ -96,7 +117,8 @@ export class MapComponent extends deepCopy implements OnInit {
   }
   // endregion
 
-  public onMouseClick(event) {
+  public onDoubleClick(event) {
+    this.selectedLayers.clearLayers();
     const startTime = new Date().getTime();
     this.addPoint(event.latlng);
     const popup = this.marker.getPopup(); let popupContent = String(popup.getContent());
@@ -125,6 +147,83 @@ export class MapComponent extends deepCopy implements OnInit {
         this.marker.openPopup();
       }
     });
+  }
+
+  public onMouseClick(event) {
+      if (this.map.getZoom() > 12) return;
+      let count = 0; let popupcontent = '';
+      this.selectedLayers.clearLayers();
+      this.sm('Querying layers, please wait...', 'wait', '', 60000);
+      Object.keys(this._layersControl.overlays).forEach(key => {
+          if (key === 'Active WildFire Perimeters' || key === 'Archived WildFire Perimeters') {
+              this._layersControl.overlays[key].query().nearby(event.latlng, 4).returnGeometry(true)
+                .run((error: any, results: any) => {
+                    if (error) {
+                        this.messanger.clear();
+                        this.sm('Error occurred, check console');
+                    }
+                    if (results && results.features.length > 0) {
+                        popupcontent += '<br><div class="popup-header"><b>' + key + ':</b></div><br>';
+                        results.features.forEach(feat => {
+                            Object.keys(feat.properties).forEach(prop => {
+                                let val = feat.properties[prop];
+                                if (prop.toLowerCase().indexOf('date') > -1) {
+                                    val = new Date(val).toLocaleDateString();
+                                }
+                                popupcontent += '<b>' + prop + ':</b> ' + val + '<br>';
+                            });
+                            popupcontent += '<br>';
+                            const col = key.indexOf('Active') > -1 ? 'yellow' : 'red';
+                            const layer = L.geoJSON(feat.geometry, {style: {color: col}});
+                            this.selectedLayers.addLayer(layer);
+                        });
+                    }
+                    count ++;
+                    this.checkCount(count, event, popupcontent);
+                });
+          } else if (key === 'MTBS Fire Boundaries') {
+            this._layersControl.overlays[key].identify().on(this.map).at(event.latlng).returnGeometry(true).tolerance(5)
+                .run((error: any, results: any) => {
+                    if (error) {
+                        this.messanger.clear();
+                        this.sm('Error occurred, check console');
+                    }
+                    if (results && results.features.length > 0) {
+                        popupcontent += '<div class="popup-header"><b>' + key + ':</b></div><br>';
+                        results.features.forEach(feat => {
+                            let date = feat.properties.STARTMONTH + '/' + feat.properties.STARTDAY + '/' +
+                            feat.properties.YEAR;
+                            if (date.indexOf('undefined') > -1) date = 'N/A';
+                            Object.keys(feat.properties).forEach(key => {
+                                let val = feat.properties[key];
+                                if (key.toLowerCase().indexOf('date') > -1) {
+                                    val = new Date(val).toLocaleDateString();
+                                }
+                                popupcontent += '<b>' + key + ':</b> ' + val + '<br>';
+                            });
+                            popupcontent += '<br>';
+                            this.selectedLayers.addLayer(L.geoJSON(feat.geometry));
+                        });
+                    }
+                    count ++;
+                    this.checkCount(count, event, popupcontent);
+                });
+          }
+      });
+  }
+
+  public checkCount(count, event, popupcontent) {
+    if (count === 3) {
+        this.addBurnPoint(event.latlng, popupcontent);
+        this.messanger.clear();
+        this.map.fitBounds(this.selectedLayers.getBounds());
+    }
+  }
+
+  public addBurnPoint(latlng, popupcontent) {
+    this.marker = L.marker(latlng).bindPopup(popupcontent).openPopup();
+    this.selectedLayers.addLayer(this.marker);
+    this.marker.openPopup();
   }
 
   public addPoint(latlng) {

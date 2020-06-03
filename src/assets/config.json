@@ -36,11 +36,59 @@
           "layerOptions": {
             "opacity": 0.6,
               "maxZoom": 10,
-              "zIndex": 9999,
+              "zIndex": 9998,
               "useCors":false
           },
-          "visible": true
-        }
+          "visible": false
+        },
+        {
+            "name": "Active WildFire Perimeters",
+            "url": "https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/Public_Wildfire_Perimeters_View/FeatureServer/0",
+            "type": "agsFeature",
+            "layerOptions": {
+                "zIndex": 9999
+            },
+            "visible": true
+          },
+          {
+            "name": "Archived WildFire Perimeters",
+            "url": "https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/Archived_Wildfire_Perimeters2/FeatureServer/0",
+            "type": "agsFeature",
+            "layerOptions": {
+                "zIndex": 9999
+            },
+            "visible": true
+          },
+          {
+            "name": "MTBS Fire Boundaries",
+            "url": "https://apps.fs.usda.gov/arcx/rest/services/EDW/EDW_MTBS_01/MapServer",
+            "type": "agsDynamic",
+            "layerOptions": {
+                "zIndex": 9999,
+                "layers": [63]
+            },
+            "visible": true
+          },
+          {
+            "name": "Burn Severity",
+            "url": "https://apps.fs.usda.gov/arcx/rest/services/RDW_Wildfire/MTBS_CONUS/MapServer",
+            "type": "agsDynamic",
+            "layerOptions": {
+                "zIndex": 9999,
+                "minZoom": 10
+            },
+            "visible": true
+          }
       ]
+    },
+    "symbols": {
+        "Active WildFire Perimeters": {
+            "color": "#EBCF26",
+            "fillColor": "#EBCF26"
+        },
+        "Archived WildFire Perimeters": {
+            "color": "#ed8f24",
+            "fillColor": "#ed8f24"
+        }
     }
   }

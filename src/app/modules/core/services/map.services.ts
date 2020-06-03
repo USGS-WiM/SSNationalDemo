@@ -19,6 +19,7 @@ export class MapService {
   public CurrentZoomLevel;
   private messanger: ToastrService;
   public FitBounds: L.LatLngBounds;
+  private conf;
 
   constructor(http: HttpClient, toastr: ToastrService) {
     this.Options = {
@@ -30,12 +31,12 @@ export class MapService {
 
     http.get('assets/config.json').subscribe(data => {
       // load baselayers
-      const conf: any = data;
-      conf.mapLayers.baseLayers.forEach(ml => {
+      this.conf = data;
+      this.conf.mapLayers.baseLayers.forEach(ml => {
         ml.layer = this.loadLayer(ml);
         if (ml.layer != null) { this._layersControl.baseLayers.push(ml); }
       });
-      conf.mapLayers.overlayLayers.forEach(ml => {
+      this.conf.mapLayers.overlayLayers.forEach(ml => {
         ml.layer = this.loadLayer(ml);
         if (ml.layer != null) { this._layersControl.overlays.push(ml); }
       });
@@ -94,6 +95,12 @@ export class MapService {
           options = ml.layerOptions;
           options.url = ml.url;
           return esri.tiledMapLayer(options);
+        case 'agsFeature':
+          options = ml.layerOptions;
+          options.url = ml.url;
+          const featLayer = esri.featureLayer(options);
+          if (this.conf.symbols[ml.name]) { featLayer.setStyle(this.conf.symbols[ml.name]); }
+          return featLayer;
         default:
           console.warn(
             'No condition exists for maplayers of type ',

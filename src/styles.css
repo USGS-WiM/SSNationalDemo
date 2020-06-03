@@ -3100,12 +3100,6 @@ img {
   border-style: none;
 }
 
-button, input, select, textarea {
-  font-family: sans-serif;
-  font-size: 100%;
-  line-height: 1.15;
-  margin: 0;
-}
 
 button, input {
   overflow: visible;
@@ -3682,79 +3676,6 @@ body, h1, h2, h3, h4, h5, h6 {
     transition: .1s;
   }
 
-input, input[type=text], select, textarea {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  background-color: transparent;
-  box-shadow: none;
-  box-sizing: inherit;
-  width: 100%;
-  background-color: #FFF;
-  color: #10152C;
-  font-size: 100%;
-  font-weight: 300;
-  box-sizing: border-box;
-  padding: 9px 10px;
-  border-radius: 3px;
-  font-family: 'Open Sans',Helvetica,sans-serif;
-  font-size: 14px;
-  letter-spacing: .4px;
-  border: 2px solid #e0e3e6;
-  -webkit-transition: .1s;
-  transition: .1s;
-  font-weight: 400;
-  color: #10152C;
-  margin-top: 5px;
-  margin-bottom: 20px;
-}
-
-  input:hover + .input-helper, input[type=text]:hover + .input-helper {
-    opacity: .5;
-    -webkit-transition: .3s;
-    transition: .3s;
-  }
-
-  input:focus, input[type=text]:focus, select:focus, textarea:focus {
-    border: 2px solid #a8d5ff;
-    -webkit-transition: .1s;
-    transition: .1s;
-    outline: 0;
-  }
-
-    input:focus + .input-helper, input[type=text]:focus + .input-helper {
-      opacity: .8;
-      -webkit-transition: .3s;
-      transition: .3s;
-    }
-
-  input.button:focus {
-    border: none;
-  }
-
-  input::-webkit-input-placeholder, input[type=text]::-webkit-input-placeholder, select::-webkit-input-placeholder, textarea::-webkit-input-placeholder {
-    color: #aeb5bd;
-    font-weight: lighter;
-  }
-
-  input:-moz-placeholder, input[type=text]:-moz-placeholder, select:-moz-placeholder, textarea:-moz-placeholder {
-    color: #aeb5bd;
-    font-weight: lighter;
-  }
-
-  input::-moz-placeholder, input[type=text]::-moz-placeholder, select::-moz-placeholder, textarea::-moz-placeholder {
-    color: #aeb5bd;
-    font-weight: lighter;
-  }
-
-  input:-ms-input-placeholder, input[type=text]:-ms-input-placeholder, select:-ms-input-placeholder, textarea:-ms-input-placeholder {
-    color: #aeb5bd;
-    font-weight: lighter;
-  }
-
-  input:disabled, input[type=text]:disabled, select:disabled, textarea:disabled {
-    background-color: #f7f8f8;
-  }
 
 select {
   background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" height="14" viewBox="0 0 29 14" width="29"><path fill="#CDDCEA" d="M9.37727 3.625l5.08154 6.93523L19.54036 3.625"/></svg>') center right no-repeat;
@@ -3773,25 +3694,6 @@ select {
 textarea {
   min-height: 120px;
 }
-
-.chx input, .rdo input {
-  visibility: hidden !important;
-  opacity: 0;
-  height: 0;
-  width: 0;
-}
-
-  .chx input:disabled + span, .rdo input:disabled + span {
-    opacity: .34;
-  }
-
-    .chx input:disabled + span:hover, .rdo input:disabled + span:hover {
-      cursor: default;
-    }
-
-    .chx input:disabled + span:before, .rdo input:disabled + span:before {
-      background-color: #FFF !important;
-    }
 
 .chx span, .rdo span {
   display: -webkit-box;
@@ -3849,42 +3751,11 @@ textarea {
   border-radius: 3px;
 }
 
-.chx input:checked + span:before {
-  background-color: #10152C;
-  content: '\00D7';
-  font-family: monospace;
-  font-weight: 300;
-  font-size: 24px;
-  color: #FFF;
-  text-align: center;
-  line-height: 19px;
-  box-sizing: border-box;
-  padding-right: 0;
-}
 
 .rdo span:before {
   border-radius: 50%;
 }
 
-.rdo input:checked + span:before {
-  background-color: #FFF;
-  border: 5px solid #10152C;
-}
-
-.switch input {
-  visibility: hidden !important;
-  opacity: 0;
-  height: 0;
-  width: 0;
-}
-
-  .switch input:disabled + span {
-    opacity: .34;
-  }
-
-    .switch input:disabled + span:hover {
-      cursor: default;
-    }
 
 .switch span {
   display: -webkit-box;
@@ -3935,24 +3806,6 @@ textarea {
     -webkit-transition: .1s;
     transition: .1s;
   }
-
-.switch input:checked + span:before {
-  background-color: #0F8AFF;
-  border: 1px solid #005eb7;
-  text-align: right;
-}
-
-.input-helper, .input-invalid-warning {
-  display: block;
-  font-size: 12px;
-  height: 15px;
-  position: absolute;
-  margin-top: -15px;
-  font-weight: 500;
-  opacity: 0;
-  -webkit-transition: .3s;
-  transition: .3s;
-}
 
 .form-invalid label {
   color: #FF0B40;
@@ -4319,52 +4172,6 @@ ul {
   line-height: 26px;
 }
 
-.button, button, input[type=button] {
-  color: #10152C;
-  background-color: #e0e3e6;
-  -webkit-transition: background-color .2s ease-in-out 0s,opacity .2s ease-in-out 0s;
-  transition: background-color .2s ease-in-out 0s,opacity .2s ease-in-out 0s;
-  font-weight: 500;
-  font-family: "Open Sans",Helvetica,sans-serif;
-  text-align: center;
-  vertical-align: middle;
-  text-transform: capitalize;
-  -webkit-user-select: none;
-  -ms-user-select: none;
-  -moz-user-select: none;
-  user-select: none;
-  white-space: nowrap;
-  overflow: hidden;
-  padding: 0 19px;
-  border: 0 none;
-  border-radius: 2px;
-  letter-spacing: .25px;
-  display: inline-block;
-  font-size: 13px;
-  height: 38px;
-  line-height: 36px;
-  outline: 0 !important;
-  -webkit-transition: .1s;
-  transition: .1s;
-}
-
-  .button:focus, button:focus, input[type=button]:focus {
-    text-decoration: none !important;
-  }
-
-  .button:hover, button:hover, input[type=button]:hover {
-    background-color: #ebedef;
-    cursor: pointer;
-    -webkit-transition: .1s;
-    transition: .1s;
-    color: inherit;
-  }
-
-  .button:active, button:active, input[type=button]:active {
-    background-color: #f1f2f4;
-    -webkit-transition: .1s;
-    transition: .1s;
-  }
 
   button.btn-black {
     background-color: #10152C;
@@ -5218,11 +5025,30 @@ ul {
     flex-grow: 3;
   }
 
-.leaflet-control-layers {
+/* .leaflet-control-layers {
   visibility: hidden !important;
-}
+} */
 
 
 #toast-container .wait{
     background-image: url('https://wim.usgs.gov/website-assets/branding/usgsanimated.svg');
+}
+
+.popup-header {
+    font-size: 14px;
+}
+
+.leaflet-popup-content {
+    overflow-y: auto;
+    max-height: 300px;
+    max-width: 300px;
+    min-width: 200px;
+}
+
+.zoom-level {
+    border: 2px solid #777;
+    line-height: 1.1;
+    padding: 5px 2px;
+    background-color: rgba(255, 255, 255, 0.5);
+    margin-left: 5px !important;
 }
