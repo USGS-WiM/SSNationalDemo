@@ -150,8 +150,8 @@ export class MapComponent extends deepCopy implements OnInit {
   }
 
   public onMouseClick(event) {
-      if (this.map.getZoom() > 12) return;
-      let count = 0; let popupcontent = '';
+      if (this.map.getZoom() > 14) return;
+      let count = 0;
       this.selectedLayers.clearLayers();
       this.sm('Querying layers, please wait...', 'wait', '', 60000);
       Object.keys(this._layersControl.overlays).forEach(key => {
@@ -163,8 +163,8 @@ export class MapComponent extends deepCopy implements OnInit {
                         this.sm('Error occurred, check console');
                     }
                     if (results && results.features.length > 0) {
-                        popupcontent += '<br><div class="popup-header"><b>' + key + ':</b></div><br>';
                         results.features.forEach(feat => {
+                            let popupcontent = '<div class="popup-header"><b>' + key + ':</b></div><br>';
                             Object.keys(feat.properties).forEach(prop => {
                                 let val = feat.properties[prop];
                                 if (prop.toLowerCase().indexOf('date') > -1) {
@@ -176,10 +176,11 @@ export class MapComponent extends deepCopy implements OnInit {
                             const col = key.indexOf('Active') > -1 ? 'yellow' : 'red';
                             const layer = L.geoJSON(feat.geometry, {style: {color: col}});
                             this.selectedLayers.addLayer(layer);
+                            this.addBurnPoint(layer.getBounds().getCenter(), popupcontent);
                         });
                     }
                     count ++;
-                    this.checkCount(count, event, popupcontent);
+                    this.checkCount(count);
                 });
           } else if (key === 'MTBS Fire Boundaries') {
             this._layersControl.overlays[key].identify().on(this.map).at(event.latlng).returnGeometry(true).tolerance(5)
@@ -189,8 +190,8 @@ export class MapComponent extends deepCopy implements OnInit {
                         this.sm('Error occurred, check console');
                     }
                     if (results && results.features.length > 0) {
-                        popupcontent += '<div class="popup-header"><b>' + key + ':</b></div><br>';
                         results.features.forEach(feat => {
+                            let popupcontent = '<div class="popup-header"><b>' + key + ':</b></div><br>';
                             let date = feat.properties.STARTMONTH + '/' + feat.properties.STARTDAY + '/' +
                             feat.properties.YEAR;
                             if (date.indexOf('undefined') > -1) date = 'N/A';
@@ -202,19 +203,20 @@ export class MapComponent extends deepCopy implements OnInit {
                                 popupcontent += '<b>' + key + ':</b> ' + val + '<br>';
                             });
                             popupcontent += '<br>';
-                            this.selectedLayers.addLayer(L.geoJSON(feat.geometry));
+                            const layer = L.geoJSON(feat.geometry);
+                            this.selectedLayers.addLayer(layer);
+                            this.addBurnPoint(layer.getBounds().getCenter(), popupcontent);
                         });
                     }
                     count ++;
-                    this.checkCount(count, event, popupcontent);
+                    this.checkCount(count);
                 });
           }
       });
   }
 
-  public checkCount(count, event, popupcontent) {
+  public checkCount(count) {
     if (count === 3) {
-        this.addBurnPoint(event.latlng, popupcontent);
         this.messanger.clear();
         this.map.fitBounds(this.selectedLayers.getBounds());
     }
