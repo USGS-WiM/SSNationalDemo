@@ -206,6 +206,18 @@ export class MapComponent extends deepCopy implements OnInit {
                             const layer = L.geoJSON(feat.geometry);
                             this.selectedLayers.addLayer(layer);
                             this.addBurnPoint(layer.getBounds().getCenter(), popupcontent);
+
+                            var selectedLayersVar = this.selectedLayers;
+                            const xhr = new XMLHttpRequest();
+                            xhr.open('GET', 'assets/example_output.geojson');
+                            xhr.setRequestHeader('Content-Type', 'application/json');
+                            xhr.responseType = 'json';
+                            xhr.onload = function() {
+                                if (xhr.status !== 200) return
+                                const layer2 = L.geoJSON(xhr.response);
+                                selectedLayersVar.addLayer(layer2);
+                            };
+                            xhr.send();
                         });
                     }
                     count ++;
