@@ -30,20 +30,8 @@
       ],
       "overlayLayers":[
         {
-          "name": "Texas",
-          "url": "https://txgeo.usgs.gov/arcgis/rest/services/Mapping/HydroBaseMapForTerrain/MapServer",
-          "type": "agsTile",
-          "layerOptions": {
-            "opacity": 0.6,
-              "maxZoom": 10,
-              "zIndex": 9998,
-              "useCors":false
-          },
-          "visible": false
-        },
-        {
             "name": "Active WildFire Perimeters",
-            "url": "https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/Public_Wildfire_Perimeters_View/FeatureServer/0",
+            "url": "https://services3.arcgis.com/T4QMspbfLg3qTGWY/ArcGIS/rest/services/Public_Wildfire_Perimeters_View/FeatureServer/0",
             "type": "agsFeature",
             "layerOptions": {
                 "zIndex": 9999
@@ -52,7 +40,7 @@
           },
           {
             "name": "Archived WildFire Perimeters",
-            "url": "https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/Archived_Wildfire_Perimeters2/FeatureServer/0",
+            "url": "https://services3.arcgis.com/T4QMspbfLg3qTGWY/ArcGIS/rest/services/Interagency_Fire_Perimeter_History_All_Years_Read_Only/FeatureServer/0",
             "type": "agsFeature",
             "layerOptions": {
                 "zIndex": 9999

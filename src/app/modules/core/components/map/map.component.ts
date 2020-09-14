@@ -9,6 +9,11 @@ import { StudyAreaService } from '../../services/studyArea.service';
 import { site } from '../../models/site';
 import { parameter } from '../../models/parameter';
 import { deepCopy } from '../../../../shared/extensions/object.DeepCopy';
+import area from '@turf/area';
+import intersect from '@turf/intersect';
+import dissolve from '@turf/dissolve';
+import union from '@turf/union';
+import combine from '@turf/combine';
 
 @Component({
   selector: 'tot-map',
@@ -117,7 +122,15 @@ export class MapComponent extends deepCopy implements OnInit {
   }
   // endregion
 
-  public onDoubleClick(event) {
+  public onMouseClick(event) {
+      if (confirm('Do you want to query a basin?')) {
+        this.queryBasin(event);
+      } else if (confirm('Do you want to query fire perimeters at this click point?')) {
+        this.selectFirePerims(event);
+      }
+  }
+
+  public queryBasin(event) {
     this.selectedLayers.clearLayers();
     const startTime = new Date().getTime();
     this.addPoint(event.latlng);
@@ -129,8 +142,7 @@ export class MapComponent extends deepCopy implements OnInit {
         const bsn = result[0];
         // update popup with returned properties
         popupContent = popupContent.replace('N/A', bsn.COMID).split('</div>')[0] +
-            '<br><b>Drainage Area:</b> ' + bsn.DrainageArea + '<br><b>Slope:</b> ' + bsn.Slope + '<br><b>Length:</b> ' +
-            bsn.Length + '<br><b>Discharge:</b> ' + bsn.Discharge + '<br><b>Velocity:</b> ' + bsn.Velocity + '</div>';
+            '<br><b>Drainage Area:</b> ' + bsn.DrainageArea + ' sq km';
         popup.setContent(popupContent);
         popup.update();
 
@@ -139,6 +151,7 @@ export class MapComponent extends deepCopy implements OnInit {
           this.messanger.clear();
           const loadTime = (new Date().getTime() - startTime) / 1000;
           this.sm('Basin load time: ' + loadTime + ' seconds', messageType.INFO, '', 10000);
+          this.queryNIFC(collection.features[0].geometry, popup, area(collection) / 1000000);
           this.marker.openPopup();
         });
       } else {
@@ -149,8 +162,63 @@ export class MapComponent extends deepCopy implements OnInit {
     });
   }
 
-  public onMouseClick(event) {
-      if (this.map.getZoom() > 14) return;
+  public queryNIFC(basin, popup, basinArea) {
+    let count = 0;
+    const features = [];
+    // 'where': 'FIRE_YEAR >= 2005 AND FIRE_YEAR <= 2020'
+    let popupContent = String(popup.getContent()) + '<br><br><b>Measured area: </b>: ' + Math.round(basinArea) + ' sq km';
+    let intArea = 0;
+    let startYear = prompt('Start year (e.g. 2005)');
+    let endYear = prompt('End year (e.g. 2020)');
+    let yearString = 'FIRE_YEAR >= ' + startYear + ' AND FIRE_YEAR <= ' + endYear;
+    Object.keys(this._layersControl.overlays).forEach(key => {
+        // TODO: DO WE NEED MTBS BOUNDARIES QUERIED
+        if (key === 'Active WildFire Perimeters' || key === 'Archived WildFire Perimeters') {
+            this._layersControl.overlays[key].query().intersects(basin).where(yearString).returnGeometry(true)
+                .run((error: any, results: any) => {
+                  if (error) {
+                      this.messanger.clear();
+                      this.sm('Error occurred, check console');
+                  }
+                  if (results && results.features.length > 0) {
+                      console.log(results.features.length);
+                      let layerPolygon = combine(results).features[0];
+                      // TODO: can't tell if it's duplicating areas...
+
+                      /* if (results.features.length > 2) {
+                        //layerPolygon = dissolve(results); //this doesn't work, sometimes it's a polygon not multipolygon??
+                        layerPolygon = union(...results.features);
+                      } else {
+                        layerPolygon = combine(results).features[0];
+                      } */
+                      features.push(layerPolygon);
+                      console.log('All perim area:' + (area(layerPolygon) / 1000000).toString());
+                      const test = intersect(layerPolygon, basin);
+                      console.log('Intersected area: ' + (area(test) / 1000000).toString());
+                      intArea += (area(test) / 1000000);
+                      console.log(intArea);
+                  }
+                  count ++;
+                  if (count === 2) {
+                    // features[0] and features[1] are multipolygons
+                    if (features.length === 2) {
+                        const testInt = intersect(features[0], features[1]);
+                        if (testInt && area(testInt)) {
+                            console.log('Duplicated area: ' + (area(testInt)).toString());
+                            intArea -= (area(testInt));
+                        }
+                    }
+                    popupContent += '<br><b>Fire Perimeter Area:</b> ' + Math.round(intArea) + ' sq km (' + Math.round(intArea / basinArea * 100) + ' %)';
+                    popup.setContent(popupContent);
+                    popup.update();
+                    this.marker.openPopup();
+                  }
+              });
+        }
+    });
+  }
+
+  public selectFirePerims(event) {
       let count = 0;
       this.selectedLayers.clearLayers();
       this.sm('Querying layers, please wait...', 'wait', '', 60000);
@@ -180,7 +248,7 @@ export class MapComponent extends deepCopy implements OnInit {
                         });
                     }
                     count ++;
-                    this.checkCount(count);
+                    this.checkCount(count, 3);
                 });
           } else if (key === 'MTBS Fire Boundaries') {
             this._layersControl.overlays[key].identify().on(this.map).at(event.latlng).returnGeometry(true).tolerance(5)
@@ -209,14 +277,14 @@ export class MapComponent extends deepCopy implements OnInit {
                         });
                     }
                     count ++;
-                    this.checkCount(count);
+                    this.checkCount(count, 3);
                 });
           }
       });
   }
 
-  public checkCount(count) {
-    if (count === 3) {
+  public checkCount(count, goal) {
+    if (count === goal) {
         this.messanger.clear();
         this.map.fitBounds(this.selectedLayers.getBounds());
     }
