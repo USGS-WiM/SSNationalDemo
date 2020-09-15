@@ -241,7 +241,6 @@ export class MapComponent extends deepCopy implements OnInit {
                         this.sm('Error occurred, check console');
                     }
                     if (results && results.features.length > 0) {
-                        this.sm('Loading, please wait...', 'wait', '', 60000);
                         this.MapService.Trace(results).subscribe((data => {
                             console.log(data);
                             const layer = L.geoJSON(data);
