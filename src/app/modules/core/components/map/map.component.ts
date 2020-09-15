@@ -16,10 +16,14 @@ import union from '@turf/union';
 import combine from '@turf/combine';
 import explode from '@turf/explode';
 
+import { NgbModalConfig, NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import {QueryModalComponent} from '../../../../components/query/query.component';
+
 @Component({
   selector: 'tot-map',
   templateUrl: './map.component.html',
-  styleUrls: ['./map.component.css']
+  styleUrls: ['./map.component.css'],
+  providers:[NgbModalConfig, NgbModal]
 })
 export class MapComponent extends deepCopy implements OnInit {
   private messanger: ToastrService;
@@ -40,6 +44,7 @@ export class MapComponent extends deepCopy implements OnInit {
   public marker: L.Marker;
   public map: L.Map;
   public selectedLayers = new L.FeatureGroup();
+  public queryModalRef;
 
   private _layersControl;
   public get LayersControl() {
@@ -58,7 +63,7 @@ export class MapComponent extends deepCopy implements OnInit {
     return this._layers;
   }
 
-  constructor(mapService: MapService, toastr: ToastrService, navservice: NavigationService) {
+  constructor(mapService: MapService, toastr: ToastrService, navservice: NavigationService, private modalService: NgbModal) {
     super();
     this.messanger = toastr;
     this.MapService = mapService;
@@ -124,11 +129,14 @@ export class MapComponent extends deepCopy implements OnInit {
   // endregion
 
   public onMouseClick(event) {
-      if (confirm('Do you want to query a basin?')) {
+    this.queryModalRef = this.modalService.open(QueryModalComponent);
+    this.queryModalRef.componentInstance.emitService.subscribe((result) => {
+      if (result === 'query-basin') {
         this.queryBasin(event);
-      } else if (confirm('Do you want to query fire perimeters at this click point?')) {
+      } else if (result === 'query-fire') {
         this.selectFirePerims(event);
       }
+    });
   }
 
   public queryBasin(event) {

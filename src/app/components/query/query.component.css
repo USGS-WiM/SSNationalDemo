@@ -1,0 +1,18 @@
+.modal-body p {
+    padding-top: 15px;
+}
+.modal-title {
+    color: #6e7490;
+    padding-top: 0;
+    font-size: 21px!important;
+}
+.modal-footer {    
+    align-items: center;
+    text-align: center;
+    display: block;
+}
+
+input[type="radio"]  {
+    margin-left: 20px;
+    margin-top: 5px;
+}
