@@ -9,13 +9,15 @@ import { CoreModule } from './modules/core/core.module';
 import { HttpClientModule } from '@angular/common/http';
 import { NavigationService } from './modules/core/services/navigationservices.service';
 import { ErrorDialogComponent } from './shared/components/error-dialog/error-dialog.component';
+import { QueryModalComponent } from './components/query/query.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     AboutModalComponent,
     NavbarComponent,
-    ErrorDialogComponent
+    ErrorDialogComponent,
+    QueryModalComponent
   ],
   imports: [
     BrowserModule,
@@ -33,6 +35,6 @@ import { ErrorDialogComponent } from './shared/components/error-dialog/error-dia
   ],
   providers: [NgbActiveModal, NavigationService],
   bootstrap: [AppComponent],
-  entryComponents: [AppComponent, AboutModalComponent]
+  entryComponents: [AppComponent, AboutModalComponent, QueryModalComponent]
 })
 export class AppModule {}

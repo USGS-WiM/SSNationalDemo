@@ -1,0 +1,26 @@
+<div class="modal-dialog">
+  <div class="modal-content">
+      <div class="modal-header">
+          <div class="col-xs-12">
+              <h4 class="modal-title pull-left">What would you like to do?</h4>  
+              <button class="close pull-right" (click)="activeModal.dismiss('Cross click')">x</button>                
+          </div>  
+      </div>
+      <div class="modal-body">
+        <div class="row">
+            <input type="radio" id="queryBasin" name="query-radio" ng-model="ModelData.query" value="query-basin" (change)="onItemChange($event.target.value)"/>&nbsp;&nbsp;Query a basin
+        </div>
+        <div class="row">
+            <input type="radio" id="selectFirePerims" name="query-radio" ng-model="ModelData.query" value="query-fire" (change)="onItemChange($event.target.value)"/>&nbsp;&nbsp;Query fire perimeters at this point
+        </div>
+      </div>
+      <div class="modal-footer">
+            <button type="button" class="btn-blue" (click)="runQuery()">
+                <span>Run Query</span>
+            </button>
+          <button type="button" class="btn-black" (click)="activeModal.dismiss('Close click')">
+              <span>Close</span>
+          </button>
+      </div>
+  </div>
+</div>
