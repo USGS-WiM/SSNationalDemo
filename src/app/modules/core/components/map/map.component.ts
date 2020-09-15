@@ -163,6 +163,12 @@ export class MapComponent extends deepCopy implements OnInit {
                         this.sm('Error occurred, check console');
                     }
                     if (results && results.features.length > 0) {
+                        this.MapService.Trace(results).subscribe((data => {
+                            console.log(data);
+                            const layer = L.geoJSON(data);
+                            this.selectedLayers.addLayer(layer);
+                        }));
+
                         results.features.forEach(feat => {
                             let popupcontent = '<div class="popup-header"><b>' + key + ':</b></div><br>';
                             Object.keys(feat.properties).forEach(prop => {
@@ -190,6 +196,11 @@ export class MapComponent extends deepCopy implements OnInit {
                         this.sm('Error occurred, check console');
                     }
                     if (results && results.features.length > 0) {
+                        this.MapService.Trace(results).subscribe((data => {
+                            console.log(data);
+                            const layer = L.geoJSON(data);
+                            this.selectedLayers.addLayer(layer);
+                        }));
                         results.features.forEach(feat => {
                             let popupcontent = '<div class="popup-header"><b>' + key + ':</b></div><br>';
                             let date = feat.properties.STARTMONTH + '/' + feat.properties.STARTDAY + '/' +
@@ -206,18 +217,6 @@ export class MapComponent extends deepCopy implements OnInit {
                             const layer = L.geoJSON(feat.geometry);
                             this.selectedLayers.addLayer(layer);
                             this.addBurnPoint(layer.getBounds().getCenter(), popupcontent);
-
-                            var selectedLayersVar = this.selectedLayers;
-                            const xhr = new XMLHttpRequest();
-                            xhr.open('GET', 'assets/example_output.geojson');
-                            xhr.setRequestHeader('Content-Type', 'application/json');
-                            xhr.responseType = 'json';
-                            xhr.onload = function() {
-                                if (xhr.status !== 200) return
-                                const layer2 = L.geoJSON(xhr.response);
-                                selectedLayersVar.addLayer(layer2);
-                            };
-                            xhr.send();
                         });
                     }
                     count ++;
