@@ -164,11 +164,12 @@ export class MapComponent extends deepCopy implements OnInit {
   }
 
   public queryNIFC(basin, popup, basinArea) {
+    this.messanger.clear();
+    this.sm('Calculating burn area, please wait...', 'wait', '', 60000);
     let count = 0;
     const features = [];
-    // 'where': 'FIRE_YEAR >= 2005 AND FIRE_YEAR <= 2020'
     let popupContent = String(popup.getContent()) + '<br><br><b>Measured area: </b>: ' + Number((basinArea).toPrecision(3)) + ' sq km';
-    let intArea = 0;
+    let intArea = 0; let fireUnion;
     /*let startYear = prompt('Start year (e.g. 2005)');
     let endYear = prompt('End year (e.g. 2020)');
     let yearString = 'FIRE_YEAR >= ' + startYear + ' AND FIRE_YEAR <= ' + endYear;*/
@@ -183,37 +184,37 @@ export class MapComponent extends deepCopy implements OnInit {
                       this.messanger.clear();
                       this.sm('Error occurred, check console');
                   }
+
+                  // TODO: issues when there are more than 1000 features returned!
+
                   if (results && results.features.length > 0) {
-                      // TODO: Issue with overlapping polygons when in the same layer
-                      // convert into multipolygon
-                      let layerPolygon = combine(results).features[0];
-                      console.log(layerPolygon);
-                      //layerPolygon = dissolve(...layerPolygon);
-                      //console.log(layerPolygon);
-                      features.push(layerPolygon);
-                      console.log('All perim area:' + (area(layerPolygon) / 1000000).toString());
-                      const test = intersect(layerPolygon, basin);
-                      console.log('Intersected area: ' + (area(test) / 1000000).toString());
-                      intArea += (area(test) / 1000000);
-                      console.log(intArea);
+                    // unionize response
+                    //this.MapService.addItem(results, 'results' + count);
+                    console.log(results.features.length);
+                    console.log(results.features[0]);
+                    if (fireUnion === undefined) fireUnion = results.features[0];
+                    for (let i = 0; i < results.features.length; i++) {
+                        const nextFeature = results.features[i];
+                        if (nextFeature) {
+                            fireUnion = union(fireUnion, nextFeature);
+                        }
+                    }
                   }
                   count ++;
                   if (count === 2) {
-                    //let featUnion = features[0];
-                    // features[0] and features[1] are multipolygons
-                    if (features.length === 2) {
-                        //featUnion = union(...features);
-                        //console.log(featUnion);
-                        const testInt = intersect(features[0], features[1]);
-                        if (testInt && area(testInt)) {
-                            console.log('Duplicated area: ' + (area(testInt)).toString());
-                            intArea -= (area(testInt) / 1000000);
-                        }
-                    }
-                    popupContent += '<br><b>NIFC Burned Area in Basin:</b> ' + Number((intArea).toPrecision(3)) + ' sq km (' + Number((intArea / basinArea * 100).toPrecision(3)) + ' %)';
-                    popup.setContent(popupContent);
-                    popup.update();
-                    this.marker.openPopup();
+                      //this.MapService.addItem(fireUnion, 'fireUnion');
+                      if (fireUnion !== undefined) {
+                        const intersectPolygons = intersect(fireUnion, basin);
+                        //this.MapService.addItem(intersectPolygons, 'intersectPolygons');
+                        intArea += area(intersectPolygons) / 1000000;
+                        console.log("Intersect area: " + (area(intersectPolygons) / 1000000));
+                      }
+                      popupContent += '<br><b>NIFC Burned Area in Basin:</b> ' + Number((intArea).toPrecision(3)) +
+                          ' sq km (' + Number((intArea / basinArea * 100).toPrecision(3)) + ' %)';
+                      popup.setContent(popupContent);
+                      popup.update();
+                      this.marker.openPopup();
+                      this.messanger.clear();
                   }
               });
         }

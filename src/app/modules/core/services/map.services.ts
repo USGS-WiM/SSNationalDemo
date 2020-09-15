@@ -152,4 +152,8 @@ export class MapService {
 
     this.FitBounds = layer.getBounds();
   }
+  public addItem(obj, name) {
+    const layer = L.geoJSON(obj);
+    this.addToMap(layer, name);
+  }
 }
