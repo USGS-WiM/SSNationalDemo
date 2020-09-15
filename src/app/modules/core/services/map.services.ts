@@ -2,10 +2,12 @@ import { Injectable, ElementRef, EventEmitter, Injector } from '@angular/core';
 import * as L from 'leaflet';
 import { Map } from 'leaflet';
 import * as esri from 'esri-leaflet';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, of, Subject } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { ToastrService } from 'ngx-toastr';
+import "leaflet/dist/images/marker-shadow.png";
+import "leaflet/dist/images/marker-icon-2x.png";
+
 export interface layerControl {
   baseLayers: Array<any>;
   overlays: Array<any>;
@@ -21,7 +23,7 @@ export class MapService {
   public FitBounds: L.LatLngBounds;
   private conf;
 
-  constructor(http: HttpClient, toastr: ToastrService) {
+  constructor(private http: HttpClient, toastr: ToastrService) {
     this.Options = {
       zoom: 5,
       center: L.latLng(39.828, -98.5795)
@@ -61,6 +63,12 @@ export class MapService {
 
     // Notify subscribers
     this.LayersControl.next(this._layersControl);
+  }
+
+  public Trace(geojson: any) {
+    console.log(geojson);
+    const httpOptions = { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) };
+    return this.http.post<any>('http://firehydrology.streamstats.usgs.gov:8000/trace', geojson, httpOptions);
   }
 
   public ToggleLayerVisibility(layername: string) {
