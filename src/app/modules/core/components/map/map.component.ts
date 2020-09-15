@@ -14,6 +14,7 @@ import intersect from '@turf/intersect';
 import dissolve from '@turf/dissolve';
 import union from '@turf/union';
 import combine from '@turf/combine';
+import explode from '@turf/explode';
 
 @Component({
   selector: 'tot-map',
@@ -166,31 +167,29 @@ export class MapComponent extends deepCopy implements OnInit {
     let count = 0;
     const features = [];
     // 'where': 'FIRE_YEAR >= 2005 AND FIRE_YEAR <= 2020'
-    let popupContent = String(popup.getContent()) + '<br><br><b>Measured area: </b>: ' + Math.round(basinArea) + ' sq km';
+    let popupContent = String(popup.getContent()) + '<br><br><b>Measured area: </b>: ' + Number((basinArea).toPrecision(3)) + ' sq km';
     let intArea = 0;
-    let startYear = prompt('Start year (e.g. 2005)');
+    /*let startYear = prompt('Start year (e.g. 2005)');
     let endYear = prompt('End year (e.g. 2020)');
-    let yearString = 'FIRE_YEAR >= ' + startYear + ' AND FIRE_YEAR <= ' + endYear;
+    let yearString = 'FIRE_YEAR >= ' + startYear + ' AND FIRE_YEAR <= ' + endYear;*/
     Object.keys(this._layersControl.overlays).forEach(key => {
-        // TODO: DO WE NEED MTBS BOUNDARIES QUERIED
+        //&& Number(endYear) >= 2020 )
         if (key === 'Active WildFire Perimeters' || key === 'Archived WildFire Perimeters') {
-            this._layersControl.overlays[key].query().intersects(basin).where(yearString).returnGeometry(true)
+            //if (key === 'Active WildFire Perimeters') {yearString = '';}
+            // just add .where(yearString) before returngeometry
+            this._layersControl.overlays[key].query().intersects(basin).returnGeometry(true)
                 .run((error: any, results: any) => {
                   if (error) {
                       this.messanger.clear();
                       this.sm('Error occurred, check console');
                   }
                   if (results && results.features.length > 0) {
-                      console.log(results.features.length);
+                      // TODO: Issue with overlapping polygons when in the same layer
+                      // convert into multipolygon
                       let layerPolygon = combine(results).features[0];
-                      // TODO: can't tell if it's duplicating areas...
-
-                      /* if (results.features.length > 2) {
-                        //layerPolygon = dissolve(results); //this doesn't work, sometimes it's a polygon not multipolygon??
-                        layerPolygon = union(...results.features);
-                      } else {
-                        layerPolygon = combine(results).features[0];
-                      } */
+                      console.log(layerPolygon);
+                      //layerPolygon = dissolve(...layerPolygon);
+                      //console.log(layerPolygon);
                       features.push(layerPolygon);
                       console.log('All perim area:' + (area(layerPolygon) / 1000000).toString());
                       const test = intersect(layerPolygon, basin);
@@ -200,15 +199,18 @@ export class MapComponent extends deepCopy implements OnInit {
                   }
                   count ++;
                   if (count === 2) {
+                    //let featUnion = features[0];
                     // features[0] and features[1] are multipolygons
                     if (features.length === 2) {
+                        //featUnion = union(...features);
+                        //console.log(featUnion);
                         const testInt = intersect(features[0], features[1]);
                         if (testInt && area(testInt)) {
                             console.log('Duplicated area: ' + (area(testInt)).toString());
-                            intArea -= (area(testInt));
+                            intArea -= (area(testInt) / 1000000);
                         }
                     }
-                    popupContent += '<br><b>Fire Perimeter Area:</b> ' + Math.round(intArea) + ' sq km (' + Math.round(intArea / basinArea * 100) + ' %)';
+                    popupContent += '<br><b>NIFC Burned Area in Basin:</b> ' + Number((intArea).toPrecision(3)) + ' sq km (' + Number((intArea / basinArea * 100).toPrecision(3)) + ' %)';
                     popup.setContent(popupContent);
                     popup.update();
                     this.marker.openPopup();
