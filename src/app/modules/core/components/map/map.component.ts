@@ -137,11 +137,6 @@ export class MapComponent extends deepCopy implements OnInit {
         this.selectFirePerims(event);
       }
     });
-      // if (confirm('Do you want to query a basin?')) {
-      //   this.queryBasin(event);
-      // } else if (confirm('Do you want to query fire perimeters at this click point?')) {
-      //   this.selectFirePerims(event);
-      // }
   }
 
   public queryBasin(event) {
