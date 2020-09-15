@@ -66,6 +66,16 @@
                 "minZoom": 10
             },
             "visible": true
+          },
+          {
+            "name": "StreamStats Gages",
+            "url": "https://gis.streamstats.usgs.gov/arcgis/rest/services/StreamStats/nationalLayers/MapServer",
+            "type": "agsDynamic",
+            "layerOptions": {
+                "zIndex": 9999,
+                "layers": [0]
+            },
+            "visible": true
           }
       ]
     },
