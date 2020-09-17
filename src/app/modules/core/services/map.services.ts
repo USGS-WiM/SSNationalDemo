@@ -66,7 +66,7 @@ export class MapService {
   }
 
   public Trace(geojson: any) {
-    console.log(geojson);
+    console.log("Input GeoJSON: " + geojson);
     const httpOptions = { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) };
     return this.http.post<any>('http://firehydrology.streamstats.usgs.gov:8000/trace', geojson, httpOptions);
   }
@@ -81,6 +81,17 @@ export class MapService {
     } else { ml.visible = true; }
     console.log('visibility toggled');
     this.LayersControl.next(this._layersControl);
+  }
+
+  public isLayerVisible(layername: string) {
+    const ml = this._layersControl.overlays.find(
+      (l: any) => l.name === layername
+    );
+    if (!ml) {
+      return;
+    } else {
+      return ml.visible;
+    }
   }
 
   private loadLayer(ml): L.Layer {

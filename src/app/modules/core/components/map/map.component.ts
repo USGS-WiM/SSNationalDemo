@@ -251,9 +251,9 @@ export class MapComponent extends deepCopy implements OnInit {
   public selectFirePerims(event) {
       const shownFields = ['INCIDENTNAME', 'COMMENTS', 'GISACRES', 'FIRE_YEAR', 'CREATEDATE', 'ACRES',
         'AGENCY', 'SOURCE', 'INCIDENT', 'FIRE_ID', 'FIRE_NAME', 'YEAR', 'STARTMONTH', 'STARTDAY', 'FIRE_TYPE'];
+      this.sm('Querying layers, please wait...', 'wait', '', 60000);
       let count = 0;
       this.selectedLayers.clearLayers();
-      this.sm('Querying layers, please wait...', 'wait', '', 60000);
       Object.keys(this._layersControl.overlays).forEach(key => {
           if (key === 'Active WildFire Perimeters' || key === 'Archived WildFire Perimeters') {
               this._layersControl.overlays[key].query().nearby(event.latlng, 4).returnGeometry(true)
@@ -263,12 +263,14 @@ export class MapComponent extends deepCopy implements OnInit {
                         this.sm('Error occurred, check console');
                     }
                     if (results && results.features.length > 0) {
-                        this.MapService.Trace(results).subscribe((data => {
-                            console.log(data);
-                            const layer = L.geoJSON(data);
-                            this.selectedLayers.addLayer(layer);
-                        }));
-
+                        if (this.MapService.isLayerVisible(key)) {
+                          this.MapService.Trace(results).subscribe((data => {
+                              this.messanger.clear();
+                              console.log("Output Geojson: " + data);
+                              const layer = L.geoJSON(data);
+                              this.selectedLayers.addLayer(layer);
+                          }));
+                        }
                         results.features.forEach(feat => {
                             let popupcontent = '<div class="popup-header"><b>' + key + ':</b></div><br>';
                             Object.keys(feat.properties).forEach(prop => {
@@ -298,11 +300,14 @@ export class MapComponent extends deepCopy implements OnInit {
                         this.sm('Error occurred, check console');
                     }
                     if (results && results.features.length > 0) {
-                        this.MapService.Trace(results).subscribe((data => {
-                            console.log(data);
-                            const layer = L.geoJSON(data);
-                            this.selectedLayers.addLayer(layer);
-                        }));
+                        if (this.MapService.isLayerVisible(key)) {
+                          this.MapService.Trace(results).subscribe((data => {
+                              this.messanger.clear();
+                              console.log("Output Geojson: " + data);
+                              const layer = L.geoJSON(data);
+                              this.selectedLayers.addLayer(layer);
+                          }));
+                        }
                         results.features.forEach(feat => {
                             let popupcontent = '<div class="popup-header"><b>' + key + ':</b></div><br>';
                             let date = feat.properties.STARTMONTH + '/' + feat.properties.STARTDAY + '/' +
@@ -332,7 +337,7 @@ export class MapComponent extends deepCopy implements OnInit {
 
   public checkCount(count, goal) {
     if (count === goal) {
-        this.messanger.clear();
+        // this.messanger.clear();
         this.map.fitBounds(this.selectedLayers.getBounds());
     }
   }
