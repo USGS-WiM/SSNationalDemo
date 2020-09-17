@@ -116,11 +116,14 @@ export class MapComponent extends deepCopy implements OnInit {
   }
 
   // region "Helper methods"
-  private sm(msg: string, mType: string = messageType.INFO, title?: string, timeout?: number) {
+  private sm(msg: string, mType: string = messageType.INFO, title?: string, timeout?: number, disableTimeout?: boolean) {
     try {
       let options: Partial<IndividualConfig> = null;
       if (timeout) {
         options = { timeOut: timeout };
+      }
+      if (disableTimeout) {
+          options = { disableTimeOut: disableTimeout};
       }
 
       this.messanger.show(msg, title, options, mType);
@@ -131,15 +134,15 @@ export class MapComponent extends deepCopy implements OnInit {
   public onMouseClick(event) {
     this.queryModalRef = this.modalService.open(QueryModalComponent);
     this.queryModalRef.componentInstance.emitService.subscribe((result) => {
-      if (result === 'query-basin') {
-        this.queryBasin(event);
-      } else if (result === 'query-fire') {
+      if (result.query === 'query-basin') {
+        this.queryBasin(event, result.startYear, result.endYear);
+      } else if (result.query === 'query-fire') {
         this.selectFirePerims(event);
       }
     });
   }
 
-  public queryBasin(event) {
+  public queryBasin(event, startYear, endYear) {
     this.selectedLayers.clearLayers();
     const startTime = new Date().getTime();
     this.addPoint(event.latlng);
@@ -160,7 +163,7 @@ export class MapComponent extends deepCopy implements OnInit {
           this.messanger.clear();
           const loadTime = (new Date().getTime() - startTime) / 1000;
           this.sm('Basin load time: ' + loadTime + ' seconds', messageType.INFO, '', 10000);
-          this.queryNIFC(collection.features[0].geometry, popup, area(collection) / 1000000);
+          this.queryNIFC(collection.features[0].geometry, popup, area(collection) / 1000000, startYear, endYear);
           this.marker.openPopup();
         });
       } else {
@@ -171,65 +174,83 @@ export class MapComponent extends deepCopy implements OnInit {
     });
   }
 
-  public queryNIFC(basin, popup, basinArea) {
-    this.messanger.clear();
+  public queryNIFC(basin, popup, basinArea, startYear, endYear) {
     this.sm('Calculating burn area, please wait...', 'wait', '', 60000);
     let count = 0;
     const features = [];
-    let popupContent = String(popup.getContent()) + '<br><br><b>Measured area: </b>: ' + Number((basinArea).toPrecision(3)) + ' sq km';
+    let popupContent = String(popup.getContent()) + '<br><br><b>Measured drainage area: </b>: ' + Number((basinArea).toPrecision(3)) + ' sq km';
     let intArea = 0; let fireUnion;
-    /*let startYear = prompt('Start year (e.g. 2005)');
-    let endYear = prompt('End year (e.g. 2020)');
-    let yearString = 'FIRE_YEAR >= ' + startYear + ' AND FIRE_YEAR <= ' + endYear;*/
+    popupContent += '<br><b>User-Defined Start Year:</b> ' + startYear + '<br><b>User-Defined End Year:</b> ' + endYear;
     Object.keys(this._layersControl.overlays).forEach(key => {
-        //&& Number(endYear) >= 2020 )
+        // don't get archived if start year is this year
         if (key === 'Active WildFire Perimeters' || key === 'Archived WildFire Perimeters') {
-            //if (key === 'Active WildFire Perimeters') {yearString = '';}
-            // just add .where(yearString) before returngeometry
-            this._layersControl.overlays[key].query().intersects(basin).returnGeometry(true)
+            let queryString;
+            if (key === 'Archived WildFire Perimeters') {
+                if (startYear >= (new Date()).getFullYear()) {
+                    count ++;
+                    return;
+                }
+                queryString = 'FIRE_YEAR >= ' + startYear.toString() + ' AND FIRE_YEAR <= ' + endYear.toString();
+            } else if (key === 'Active WildFire Perimeters') {
+                if (endYear < (new Date()).getFullYear()) {
+                    count ++;
+                    return;
+                }
+                queryString = '1=1';
+            }
+            console.log(queryString);
+            this._layersControl.overlays[key].query().intersects(basin).where(queryString).returnGeometry(true)
                 .run((error: any, results: any) => {
-                  if (error) {
-                      this.messanger.clear();
-                      this.sm('Error occurred, check console');
-                  }
+                    if (error) {
+                        this.messanger.clear();
+                        this.sm('Error occurred, check console', 'Error');
+                    }
 
-                  // TODO: issues when there are more than 1000 features returned!
-
-                  if (results && results.features.length > 0) {
+                    if (results && results.features.length > 0) {
                     // unionize response
-                    //this.MapService.addItem(results, 'results' + count);
                     console.log(results.features.length);
-                    console.log(results.features[0]);
-                    if (fireUnion === undefined) fireUnion = results.features[0];
+                    if (results.features.length > 999) {
+                        // issues when there are more than 1000 features returned!
+                        // TODO: this isn't showing up for some reason!
+                        this.sm('Query returned limited results, burned area may be incorrect', messageType.INFO, '', 120000, true);
+                    }
+                    if (fireUnion === undefined) { fireUnion = results.features[0]; }
                     for (let i = 0; i < results.features.length; i++) {
                         const nextFeature = results.features[i];
                         if (nextFeature) {
                             fireUnion = union(fireUnion, nextFeature);
                         }
                     }
-                  }
-                  count ++;
-                  if (count === 2) {
-                      //this.MapService.addItem(fireUnion, 'fireUnion');
-                      if (fireUnion !== undefined) {
-                        const intersectPolygons = intersect(fireUnion, basin);
-                        //this.MapService.addItem(intersectPolygons, 'intersectPolygons');
-                        intArea += area(intersectPolygons) / 1000000;
-                        console.log("Intersect area: " + (area(intersectPolygons) / 1000000));
-                      }
-                      popupContent += '<br><b>NIFC Burned Area in Basin:</b> ' + Number((intArea).toPrecision(3)) +
-                          ' sq km (' + Number((intArea / basinArea * 100).toPrecision(3)) + ' %)';
-                      popup.setContent(popupContent);
-                      popup.update();
-                      this.marker.openPopup();
-                      this.messanger.clear();
-                  }
-              });
+                    }
+                    count ++;
+                    if (count === 2) {
+                        //this.MapService.addItem(fireUnion, 'fireUnion');
+                        if (fireUnion !== undefined) {
+                            try {
+                                const intersectPolygons = intersect(fireUnion, basin);
+                                intArea += area(intersectPolygons) / 1000000;
+                                console.log("Intersect area: " + (area(intersectPolygons) / 1000000));
+                                this.messanger.clear();
+                            } catch (error) {
+                                this.messanger.clear();
+                                console.error(error);
+                                this.sm('Error calculating burn area', 'error', '', 120000, true);
+                            }
+                        }
+                        popupContent += '<br><b>NIFC Burned Area in Basin:</b> ' + Number((intArea).toPrecision(3)) +
+                            ' sq km (' + Number((intArea / basinArea * 100).toPrecision(3)) + ' %)';
+                        popup.setContent(popupContent);
+                        popup.update();
+                        this.marker.openPopup();
+                    }
+                });
         }
     });
   }
 
   public selectFirePerims(event) {
+      const shownFields = ['INCIDENTNAME', 'COMMENTS', 'GISACRES', 'FIRE_YEAR', 'CREATEDATE', 'ACRES',
+        'AGENCY', 'SOURCE', 'INCIDENT', 'FIRE_ID', 'FIRE_NAME', 'YEAR', 'STARTMONTH', 'STARTDAY', 'FIRE_TYPE'];
       let count = 0;
       this.selectedLayers.clearLayers();
       this.sm('Querying layers, please wait...', 'wait', '', 60000);
@@ -251,11 +272,13 @@ export class MapComponent extends deepCopy implements OnInit {
                         results.features.forEach(feat => {
                             let popupcontent = '<div class="popup-header"><b>' + key + ':</b></div><br>';
                             Object.keys(feat.properties).forEach(prop => {
-                                let val = feat.properties[prop];
-                                if (prop.toLowerCase().indexOf('date') > -1) {
-                                    val = new Date(val).toLocaleDateString();
+                                if (shownFields.indexOf(prop.toUpperCase()) > -1) {
+                                    let val = feat.properties[prop];
+                                    if (prop.toLowerCase().indexOf('date') > -1) {
+                                        val = new Date(val).toLocaleDateString();
+                                    }
+                                    popupcontent += '<b>' + prop + ':</b> ' + val + '<br>';
                                 }
-                                popupcontent += '<b>' + prop + ':</b> ' + val + '<br>';
                             });
                             popupcontent += '<br>';
                             const col = key.indexOf('Active') > -1 ? 'yellow' : 'red';
@@ -286,11 +309,13 @@ export class MapComponent extends deepCopy implements OnInit {
                             feat.properties.YEAR;
                             if (date.indexOf('undefined') > -1) date = 'N/A';
                             Object.keys(feat.properties).forEach(key => {
-                                let val = feat.properties[key];
-                                if (key.toLowerCase().indexOf('date') > -1) {
-                                    val = new Date(val).toLocaleDateString();
+                                if (shownFields.indexOf(key.toUpperCase()) > -1) {
+                                    let val = feat.properties[key];
+                                    if (key.toLowerCase().indexOf('date') > -1) {
+                                        val = new Date(val).toLocaleDateString();
+                                    }
+                                    popupcontent += '<b>' + key + ':</b> ' + val + '<br>';
                                 }
-                                popupcontent += '<b>' + key + ':</b> ' + val + '<br>';
                             });
                             popupcontent += '<br>';
                             const layer = L.geoJSON(feat.geometry);
@@ -319,9 +344,9 @@ export class MapComponent extends deepCopy implements OnInit {
   }
 
   public addPoint(latlng) {
-    this.MapService.removeLayer('basin');
+    this.MapService.removeLayer('Basin');
     const content = '<div><b>Latitude:</b> ' + latlng.lat + '<br><b>Longitude:</b> ' + latlng.lng + '<br><b>Comid:</b> N/A</div>';
     this.marker = L.marker(latlng).bindPopup(content);
-    this.MapService.addToMap(this.marker, 'marker');
+    this.MapService.addToMap(this.marker, 'Marker');
   }
 }

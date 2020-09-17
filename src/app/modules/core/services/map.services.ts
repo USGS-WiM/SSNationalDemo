@@ -148,7 +148,7 @@ export class MapService {
 
   public addCollection(obj) {
     const layer = L.geoJSON(obj);
-    this.addToMap(layer, 'basin');
+    this.addToMap(layer, 'Basin');
 
     this.FitBounds = layer.getBounds();
   }

@@ -10,6 +10,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { NavigationService } from './modules/core/services/navigationservices.service';
 import { ErrorDialogComponent } from './shared/components/error-dialog/error-dialog.component';
 import { QueryModalComponent } from './components/query/query.component';
+import { FormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [
@@ -31,7 +32,8 @@ import { QueryModalComponent } from './components/query/query.component';
       preventDuplicates: true,
       countDuplicates: true
     }),
-    NgbModule.forRoot()
+    NgbModule.forRoot(),
+    FormsModule
   ],
   providers: [NgbActiveModal, NavigationService],
   bootstrap: [AppComponent],

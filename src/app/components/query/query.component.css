@@ -16,3 +16,17 @@ input[type="radio"]  {
     margin-left: 20px;
     margin-top: 5px;
 }
+
+input[type="number"] {
+    margin-left: 25px;
+    margin-top: 5px;
+}
+
+.yearSelectLabel {
+    margin: 5px;
+}
+
+.error-message {
+    margin-left: 25px;
+    color: red;
+}

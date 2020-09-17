@@ -10,6 +10,15 @@
         <div class="row">
             <input type="radio" id="queryBasin" name="query-radio" ng-model="ModelData.query" value="query-basin" (change)="onItemChange($event.target.value)"/>&nbsp;&nbsp;Query a basin
         </div>
+        <div class="row" *ngIf="radioButtonValue == 'query-basin'">
+            <input type="number" id="startYear" name="query-number" [(ngModel)]="startYear"/><div class="yearSelectLabel">Burn Area Start Year</div>
+            <div class="error-message" *ngIf="startYear < 1900 || startYear > thisYear">Select a valid year (e.g. {{ thisYear }})</div>
+        </div>
+        <div *ngIf="radioButtonValue == 'query-basin'" class="row">
+            <input type="number" id="endYear" name="query-number" [(ngModel)]="endYear"/><div class="yearSelectLabel">Burn Area End Year</div>
+            <div class="error-message" *ngIf="endYear < 1900 || endYear > thisYear">Select a valid year (e.g. {{ thisYear }})</div>
+            <div class="error-message" *ngIf="endYear < startYear">End year must be greater than or equal to start year</div>
+        </div>
         <div class="row">
             <input type="radio" id="selectFirePerims" name="query-radio" ng-model="ModelData.query" value="query-fire" (change)="onItemChange($event.target.value)"/>&nbsp;&nbsp;Query fire perimeters at this point
         </div>
