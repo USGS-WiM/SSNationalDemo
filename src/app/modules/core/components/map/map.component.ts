@@ -5,6 +5,7 @@ import { ToastrService, IndividualConfig } from 'ngx-toastr';
 import * as messageType from '../../../../shared/messageType';
 import { MapService } from '../../services/map.services';
 import { NavigationService } from '../../services/navigationservices.service';
+import { NSSService } from '../../services/nss.service';
 import { StudyAreaService } from '../../services/studyArea.service';
 import { site } from '../../models/site';
 import { parameter } from '../../models/parameter';
@@ -18,6 +19,10 @@ import explode from '@turf/explode';
 
 import { NgbModalConfig, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import {QueryModalComponent} from '../../../../components/query/query.component';
+import { GagepageComponent } from '../../../../modules/core/components/gagepage/gagepage.component';
+import { GagePage } from '../../../../shared/interfaces/gagepage'
+import { AppComponent } from "../../../../app.component";
+import { event } from 'jquery';
 
 @Component({
   selector: 'tot-map',
@@ -30,6 +35,8 @@ export class MapComponent extends deepCopy implements OnInit {
   private MapService: MapService;
   private NavigationService: NavigationService;
   private StudyAreaService: StudyAreaService;
+  private NSSService: NSSService;
+  private AppComponent: AppComponent;
   private markers: L.Layer[] = [];
   private Site_reference: site;
   //private results = [];
@@ -42,9 +49,12 @@ export class MapComponent extends deepCopy implements OnInit {
   private methodType: string = null;
   public innerHeight = window.innerHeight;
   public marker: L.Marker;
+  public gageMarker: L.Marker;
   public map: L.Map;
   public selectedLayers = new L.FeatureGroup();
   public queryModalRef;
+  public e = esri;
+  public show: boolean;
 
   private _layersControl;
   public get LayersControl() {
@@ -62,8 +72,12 @@ export class MapComponent extends deepCopy implements OnInit {
   public get Layers() {
     return this._layers;
   }
+  
 
-  constructor(mapService: MapService, toastr: ToastrService, navservice: NavigationService, private modalService: NgbModal) {
+  constructor(mapService: MapService,
+    toastr: ToastrService, 
+    navservice: NavigationService, 
+    private modalService: NgbModal) {
     super();
     this.messanger = toastr;
     this.MapService = mapService;
@@ -89,7 +103,11 @@ export class MapComponent extends deepCopy implements OnInit {
       activelayers.unshift(data.baseLayers.find((l: any) => l.visible).layer);
       this._layers = activelayers;
     });
+
+    this.MapService.currentShow.subscribe(show => this.show = show)
+
   }
+
 
   public onZoomChange(zoom: number) {
     this.MapService.CurrentZoomLevel = zoom;
@@ -99,7 +117,7 @@ export class MapComponent extends deepCopy implements OnInit {
 
   public onMapReady(map: L.Map) {
     this.map = map;
-    this.selectedLayers.addTo(map);
+    this.selectedLayers.addTo(map)
     L.control.scale().addTo(map);
     const zoomInfo = new (L.Control.extend({
         options: {position: 'bottomleft'}
@@ -113,7 +131,9 @@ export class MapComponent extends deepCopy implements OnInit {
     };
 
     zoomInfo.addTo(this.map);
+
   }
+
 
   // region "Helper methods"
   private sm(msg: string, mType: string = messageType.INFO, title?: string, timeout?: number, disableTimeout?: boolean) {
@@ -129,17 +149,21 @@ export class MapComponent extends deepCopy implements OnInit {
       this.messanger.show(msg, title, options, mType);
     } catch (e) {}
   }
-  // endregion
+  // endregion 
 
   public onMouseClick(event) {
-    this.queryModalRef = this.modalService.open(QueryModalComponent);
-    this.queryModalRef.componentInstance.emitService.subscribe((result) => {
-      if (result.query === 'query-basin') {
-        this.queryBasin(event, result.startYear, result.endYear);
-      } else if (result.query === 'query-fire') {
-        this.selectFirePerims(event);
-      }
-    });
+    if (this.show) {
+      this.queryModalRef = this.modalService.open(QueryModalComponent);
+      this.queryModalRef.componentInstance.emitService.subscribe((result) => {
+        if (result.query === 'query-basin') {
+          this.queryBasin(event, result.startYear, result.endYear);
+        } else if (result.query === 'query-fire') {
+          this.selectFirePerims(event);
+        }
+      });
+    } if (!this.show) {
+      return false;
+    } 
   }
 
   public queryBasin(event, startYear, endYear) {
