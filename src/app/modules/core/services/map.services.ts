@@ -58,8 +58,9 @@ export class MapService {
     const ml = this._layersControl.overlays.find(
       (l: any) => l.name === newlayer.name
     );
-    if (ml != null) {ml.layer = newlayer.layer;
-    } else {this._layersControl.overlays.push(newlayer); }
+    if (ml != null) {
+      ml.layer = newlayer.layer;
+    } else { this._layersControl.overlays.push(newlayer); }
 
     // Notify subscribers
     this.LayersControl.next(this._layersControl);
@@ -77,7 +78,8 @@ export class MapService {
     );
     if (!ml) { return; }
 
-    if (ml.visible) { ml.visible = false;
+    if (ml.visible) {
+      ml.visible = false;
     } else { ml.visible = true; }
     console.log('visibility toggled');
     this.LayersControl.next(this._layersControl);
@@ -109,7 +111,23 @@ export class MapService {
           // https://esri.github.io/esri-leaflet/api-reference/layers/dynamic-map-layer.html
           options = ml.layerOptions;
           options.url = ml.url;
-          return esri.dynamicMapLayer(options);
+          const dynamicLayer = esri.dynamicMapLayer(options);
+          if (ml.name === 'StreamStats Gages') {
+            dynamicLayer.bindPopup((error, featureCollection) => {
+              if (error || featureCollection.features.length === 0) {
+                return false;
+              } else {
+                const featureData = featureCollection.features[0].properties;
+                const popupContent = '<h4>NWIS Streamgages<h4><ul>' +
+                '<li>Station ID: ' + featureData.STA_ID + '</li>' +
+                '<li>Station Name: ' + featureData.STA_NAME + '</li>' +
+                '<li><a href="' + featureData.FeatureURL + '">NWIS Site Page</a> </li>' +
+                 '</ul>';
+                return popupContent;
+              }
+            });
+          }
+          return dynamicLayer;
         case 'agsTile':
           options = ml.layerOptions;
           options.url = ml.url;
