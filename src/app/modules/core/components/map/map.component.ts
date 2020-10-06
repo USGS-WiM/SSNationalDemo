@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit } from '@angular/core';
 import * as L from 'leaflet';
 import * as esri from 'esri-leaflet';
 import { ToastrService, IndividualConfig } from 'ngx-toastr';
@@ -56,6 +56,7 @@ export class MapComponent extends deepCopy implements OnInit {
   public e = esri;
   public show: boolean;
 
+
   private _layersControl;
   public get LayersControl() {
     return this._layersControl;
@@ -77,14 +78,17 @@ export class MapComponent extends deepCopy implements OnInit {
   constructor(mapService: MapService,
     toastr: ToastrService, 
     navservice: NavigationService, 
-    private modalService: NgbModal) {
+    private modalService: NgbModal,
+    private nssService: NSSService) {
     super();
     this.messanger = toastr;
     this.MapService = mapService;
     this.NavigationService = navservice;
+    this.NSSService = nssService;
   }
 
   ngOnInit() {
+
     this.MapService.LayersControl.subscribe(data => {
       this._layersControl = {
         baseLayers: data.baseLayers.reduce((acc, ml) => {
@@ -96,6 +100,26 @@ export class MapComponent extends deepCopy implements OnInit {
           return acc;
         }, {})
       };
+      if (this._layersControl.overlays['StreamStats Gages']) {
+        const gageLayer = this._layersControl.overlays['StreamStats Gages'];
+        gageLayer.bindPopup((error, featureCollection) => {
+              if (error || featureCollection.features.length === 0) {
+                return false
+              }
+              else { 
+                const featureData = featureCollection.features[0].properties;
+                this.showGagePageModal(featureData.STA_ID);
+                const popupContent = '<h4>NWIS Stream Gages<h4><ul>' + 
+                '<li>Station Name: ' + featureData.STA_NAME + '</li>' +
+                '<li>Station ID: ' + featureData.STA_ID + '</li>' + 
+                '<li><a href="' + featureData.FeatureURL + '"target="_blank">NWIS Page</a></li>' +
+                '<li><button onclick="showGagePageModal(' + featureData.STA_ID + ')"> Open Station Info </button></li>' +
+                '</ul> ';
+                //this.showGagePageModal(id);
+                return popupContent;
+              }
+            })
+      }
     });
 
     this.MapService.LayersControl.subscribe(data => {
@@ -106,8 +130,15 @@ export class MapComponent extends deepCopy implements OnInit {
 
     this.MapService.currentShow.subscribe(show => this.show = show)
 
-  }
+  }  //End OnInit
 
+  public showGagePageModal(id) {
+    const gagePageForm: GagePage = {
+      show: true,
+      gageCode: id
+    }
+    this.nssService.setGagePageModal(gagePageForm);
+  };
 
   public onZoomChange(zoom: number) {
     this.MapService.CurrentZoomLevel = zoom;

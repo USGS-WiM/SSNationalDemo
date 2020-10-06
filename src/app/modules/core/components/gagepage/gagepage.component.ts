@@ -8,7 +8,7 @@ import { Station } from '../../../../shared/interfaces/station';
 @Component({
   selector: 'gagePageModal',
   templateUrl: './gagepage.component.html',
-  styleUrls: ['./gagepage.component.scss']
+  styleUrls: ['./gagepage.component.css']
 })
 export class GagepageComponent implements OnInit, OnDestroy {
   @ViewChild('gagePage') public gagePageModal; // : ModalDirective;  //modal for validator
@@ -17,25 +17,28 @@ export class GagepageComponent implements OnInit, OnDestroy {
   public modalRef;
   public code;
   public gage: Station;
+  public statisticGroups;
 
   constructor(
-    private _nssService: NSSService, 
+    private _nssService: NSSService,
     private _mapService: MapService,
     private _modalService: NgbModal) {}
 
   ngOnInit() {
-    this.modalSubscript = this._mapService.showtheGagePageModal.subscribe((result: GagePage) => {
+    this.modalSubscript = this._nssService.showtheGagePageModal.subscribe((result) => {
+      console.log(result)
       if (result.show) { 
           this.code = result.gageCode;
-          this._mapService.getGagePageInfo(this.code).subscribe((res: Station) => {
+          this._nssService.getGagePageInfo(this.code).subscribe((res: Station) => {
             this.gage = res;
             //this.getCitations();
             this.showGagePageForm();
+            console.log(this.gage)
           });
         }
     });
     this.modalElement = this.gagePageModal;
-
+    
   }  // end OnInit
   
   // public getCitations(){
@@ -55,7 +58,13 @@ export class GagepageComponent implements OnInit, OnDestroy {
 
   public showGagePageForm(){
     this.modalRef = this._modalService.open(this.modalElement, { backdrop: 'static', keyboard: false, size: 'lg' });
+    console.log("pass")
   }
+
+  getStatGroup(id) {
+    return this.statisticGroups.find(sg => sg.id == id).name;
+}
+
 
   ngOnDestroy() {
     this.modalSubscript.unsubscribe();

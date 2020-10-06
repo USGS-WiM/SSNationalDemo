@@ -102,7 +102,7 @@
 									<td>{{s.value}}</td>
 									<td>{{s.unitType.name}}</td>
                                     <td>{{s.citationID}}</td>
-									<td>{{getStatGroup(s.statisticGroupTypeID)}}</td>
+									<td>{{s.statisticGroupTypeID}}</td>  <!-- getStatGroup(s.statisticGroupTypeID) -->
 									<td>
 										<span><input type="checkbox" [checked]="s.isPreferred" onclick="return false"/></span>
 									</td>
@@ -116,7 +116,7 @@
 			</div>
 		</div>
 		<!--Citations-->
-		<div *ngIf="gage.citations.length > 0">
+		<!-- <div *ngIf="gage.citations.length > 0">
 			<div class="table-title">Citations</div>
 			<div>
 				<table style="border:solid 1px gray" class="custom-table">
@@ -134,8 +134,8 @@
 					</tbody>
 				</table>
 			</div>
-		</div>
-	</div>
+		</div> -->
+	</div> 
 
 	<!-- Footer / Buttons -->
 	<div class="modal-body-footer">

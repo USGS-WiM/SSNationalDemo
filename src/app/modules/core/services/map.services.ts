@@ -5,7 +5,7 @@ import * as esri from 'esri-leaflet';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, Observable, of, Subject } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
-import { MapComponent } from '../components/map/map.component';
+//import { MapComponent } from '../components/map/map.component';
 import { GagePage } from '../../../shared/interfaces/gagepage';
 import { Station } from '../../../shared/interfaces/station';
 import { NSSService } from '../services/nss.service';
@@ -29,8 +29,9 @@ export class MapService {
   private conf;
   private showSource = new BehaviorSubject(false);
   currentShow = this.showSource.asObservable();
+  public displayGagePage;
 
-  constructor(private http: HttpClient, toastr: ToastrService) {
+  constructor(private http: HttpClient, toastr: ToastrService, nssService: NSSService) {
     this.Options = {
       zoom: 5,
       center: L.latLng(39.828, -98.5795)
@@ -54,34 +55,6 @@ export class MapService {
 
     this.CurrentZoomLevel = this.Options.zoom;
   }
-
-    // -+-+-+-+-+-+-+-+-+ show gagepage -+-+-+-+-+-+-+-+
-    private _showHideGagePageModal: Subject<GagePage> = new Subject<GagePage>();
-    public setGagePageModal(val: GagePage) {
-        this._showHideGagePageModal.next(val);
-    }
-    
-    public showGagePageModal(id) {
-      console.log("pass")
-       const gagePageForm: GagePage = {
-         show: true,
-         gageCode: id
-       }
-       this.setGagePageModal(gagePageForm);
-       //return this._nssService._showHideGagePageModal.asObservable();
-    };
-
-    public get showtheGagePageModal(): any{
-      return this._showHideGagePageModal.asObservable();
-    }
-
-    // get gage page info
-    public getGagePageInfo(code) {
-        return this.http
-        .get('https://test.streamstats.usgs.gov/gagestatsservices/stations/' + code)
-        .pipe(map(res => <Station>res));
-    }
-
 
   changeShow(show: boolean) {
     this.showSource.next(show)
@@ -149,25 +122,6 @@ export class MapService {
           options = ml.layerOptions;
           options.url = ml.url;
           const dynamicLayer = esri.dynamicMapLayer(options);
-          if (ml.name === "StreamStats Gages") {
-            dynamicLayer.bindPopup((error, featureCollection) => {
-              if (error || featureCollection.features.length === 0) {
-                return false
-              }
-              else { 
-                const featureData = featureCollection.features[0].properties;
-                this.showGagePageModal(featureData.STA_ID);
-                const popupContent = '<h4>NWIS Stream Gages<h4><ul>' + 
-                '<li>Station Name: ' + featureData.STA_NAME + '</li>' +
-                '<li>Station ID: ' + featureData.STA_ID + '</li>' + 
-                '<li><a href="' + featureData.FeatureURL + '"target="_blank">NWIS Page</a></li>' +
-                '<li><button  onclick= "console.log('+ "'" + featureData.STA_NAME + "'" +')"> Open Station Info </button></li>' +
-                
-                '</ul>';
-                return popupContent;
-              }
-            })
-          }
           return dynamicLayer;
           
         case 'agsTile':
