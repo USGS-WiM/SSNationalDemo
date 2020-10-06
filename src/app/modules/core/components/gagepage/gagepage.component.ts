@@ -4,6 +4,7 @@ import { MapService } from '../../services/map.services';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { GagePage } from '../../../../shared/interfaces/gagepage';
 import { Station } from '../../../../shared/interfaces/station';
+import { BsModalService, BsModalRef } from 'ngx-bootstrap/modal';
 
 @Component({
   selector: 'gagePageModal',
@@ -11,7 +12,9 @@ import { Station } from '../../../../shared/interfaces/station';
   styleUrls: ['./gagepage.component.css']
 })
 export class GagepageComponent implements OnInit, OnDestroy {
-  @ViewChild('gagePage') public gagePageModal; // : ModalDirective;  //modal for validator
+  @ViewChild('gagePage', { static: false }) gagePageModal: GagepageComponent;
+  bsModalRef: BsModalRef;
+
   private modalSubscript;
   private modalElement: any;
   public modalRef;
@@ -21,26 +24,38 @@ export class GagepageComponent implements OnInit, OnDestroy {
 
   constructor(
     private _nssService: NSSService,
-    // private _mapService: MapService,
-    private _modalService: NgbModal
+    private modalService: BsModalService
   ) { }
 
   ngOnInit() {
     this.modalSubscript = this._nssService.showtheGagePageModal.subscribe((result) => {
-      console.log(result)
+      console.log(result);
       if (result.show) {
         this.code = result.gageCode;
         this._nssService.getGagePageInfo(this.code).subscribe((res: Station) => {
           this.gage = res;
-          //this.getCitations();
+          // this.getCitations();
+          this.modalElement = this.gagePageModal;
           this.showGagePageForm();
-          console.log(this.gage);
         });
       }
     });
-    this.modalElement = this.gagePageModal;
 
   }  // end OnInit
+
+  public showGagePageForm() {
+    // this.modalRef = this._modalService.open(this.modalElement, { backdrop: 'static', size: 'lg' });
+    this.bsModalRef = this.modalService.show(this.gagePageModal);
+    console.log('pass');
+  }
+
+  getStatGroup(id) {
+    return this.statisticGroups.find(sg => sg.id === id).name;
+  }
+
+  ngOnDestroy() {
+    this.modalSubscript.unsubscribe();
+  }
 
   // public getCitations(){
   //   this.gage.citations = [];
@@ -57,18 +72,6 @@ export class GagepageComponent implements OnInit, OnDestroy {
   //   });
   // }
 
-  public showGagePageForm() {
-    this.modalRef = this._modalService.open(this.modalElement, { backdrop: 'static', keyboard: false, size: 'lg' });
-    console.log("pass")
-  }
 
-  getStatGroup(id) {
-    return this.statisticGroups.find(sg => sg.id === id).name;
-  }
-
-
-  ngOnDestroy() {
-    this.modalSubscript.unsubscribe();
-  }
 
 }

@@ -12,6 +12,7 @@ import { ErrorDialogComponent } from './shared/components/error-dialog/error-dia
 import { QueryModalComponent } from './components/query/query.component';
 import { FormsModule } from '@angular/forms';
 import { GagepageComponent } from './modules/core/components/gagepage/gagepage.component';
+import { ModalModule } from 'ngx-bootstrap/modal';
 
 @NgModule({
   declarations: [
@@ -34,7 +35,8 @@ import { GagepageComponent } from './modules/core/components/gagepage/gagepage.c
       countDuplicates: true
     }),
     NgbModule,
-    FormsModule
+    FormsModule,
+    ModalModule.forRoot()
   ],
   providers: [NgbActiveModal, NavigationService],
   bootstrap: [AppComponent],
