@@ -11,6 +11,7 @@ import { NavigationService } from './modules/core/services/navigationservices.se
 import { ErrorDialogComponent } from './shared/components/error-dialog/error-dialog.component';
 import { QueryModalComponent } from './components/query/query.component';
 import { FormsModule } from '@angular/forms';
+import { GagepageComponent } from './modules/core/components/gagepage/gagepage.component';
 
 @NgModule({
   declarations: [
@@ -32,11 +33,11 @@ import { FormsModule } from '@angular/forms';
       preventDuplicates: true,
       countDuplicates: true
     }),
-    NgbModule.forRoot(),
+    NgbModule,
     FormsModule
   ],
   providers: [NgbActiveModal, NavigationService],
   bootstrap: [AppComponent],
-  entryComponents: [AppComponent, AboutModalComponent, QueryModalComponent]
+  entryComponents: [AppComponent, AboutModalComponent, QueryModalComponent, GagepageComponent]
 })
 export class AppModule {}

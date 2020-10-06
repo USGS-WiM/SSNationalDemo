@@ -5,6 +5,12 @@
   <wim-navbar>
     <div nav-title>{{title}}</div>
     <div nav-links>
+      <a *ngIf="!show" (click)="Activate()">
+        <span class="nav-link-text">Activate Query Tool</span>
+      </a>
+      <a *ngIf="show" (click)="Deactivate()">
+        <span class="nav-link-text">Deactivate Query Tool</span>
+      </a>
       <a (click)="open()">
           <span>
               <i class="ion-information-circled"></i>
