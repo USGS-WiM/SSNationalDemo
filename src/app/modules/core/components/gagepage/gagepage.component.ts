@@ -23,29 +23,33 @@ export class GagepageComponent implements OnInit, OnDestroy {
   public statisticGroups;
 
   constructor(
-    private _nssService: NSSService,
+    private nssService: NSSService,
     private modalService: BsModalService
   ) { }
 
   ngOnInit() {
-    this.modalSubscript = this._nssService.showtheGagePageModal.subscribe((result) => {
+    this.modalSubscript = this.nssService.showtheGagePageModal.subscribe((result) => {
       console.log(result);
       if (result.show) {
         this.code = result.gageCode;
-        this._nssService.getGagePageInfo(this.code).subscribe((res: Station) => {
-          this.gage = res;
+        this.nssService.getGagePageInfo(this.code).subscribe((res: Station) => {
+          // this.gage = res;
           // this.getCitations();
           this.modalElement = this.gagePageModal;
-          this.showGagePageForm();
+          this.showGagePageForm(res);
         });
       }
     });
 
   }  // end OnInit
 
-  public showGagePageForm() {
+  public showGagePageForm(gageData) {
     // this.modalRef = this._modalService.open(this.modalElement, { backdrop: 'static', size: 'lg' });
-    this.bsModalRef = this.modalService.show(this.gagePageModal);
+    const initialState = {
+      gage: gageData
+    };
+    this.gage = gageData;
+    this.bsModalRef = this.modalService.show(this.modalElement, { initialState });
     console.log('pass');
   }
 
