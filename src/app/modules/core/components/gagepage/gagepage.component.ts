@@ -5,6 +5,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { GagePage } from '../../../../shared/interfaces/gagepage';
 import { Station } from '../../../../shared/interfaces/station';
 import { BsModalService, BsModalRef } from 'ngx-bootstrap/modal';
+import { resolve } from 'url';
 
 @Component({
   selector: 'gagePageModal',
@@ -49,8 +50,7 @@ export class GagepageComponent implements OnInit, OnDestroy {
       gage: gageData
     };
     this.gage = gageData;
-    this.bsModalRef = this.modalService.show(this.modalElement, { initialState });
-    console.log('pass');
+    this.bsModalRef = this.modalService.show(this.modalElement, {  initialState, class: 'modal-lg', show: true });
   }
 
   getStatGroup(id) {
