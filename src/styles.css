@@ -5052,3 +5052,12 @@ ul {
     background-color: rgba(255, 255, 255, 0.5);
     margin-left: 5px !important;
 }
+
+.modal-xl .modal-dialog {
+    width: 94%;
+    max-width: 1200px !important;
+  }
+.modal-xl .modal-dialog {
+    width: 94%;
+    max-width: 1200px !important;
+  }

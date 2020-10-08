@@ -33,7 +33,6 @@ export class GagepageComponent implements OnInit, OnDestroy {
             this.gage = res;
             //this.getCitations();
             this.showGagePageForm();
-            console.log(this.gage)
           });
         }
     });
@@ -57,8 +56,8 @@ export class GagepageComponent implements OnInit, OnDestroy {
   // }
 
   public showGagePageForm(){
-    this.modalRef = this._modalService.open(this.modalElement, { backdrop: 'static', keyboard: false, size: 'lg' });
-    console.log("pass")
+    this.modalRef = this._modalService.open(this.modalElement, { backdrop: 'static', keyboard: false, size: 'lg', windowClass: 'modal-xl' });
+    window.dispatchEvent(new Event('resize'));
   }
 
   getStatGroup(id) {

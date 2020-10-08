@@ -14,3 +14,12 @@ button {
 .modal-body{
     overflow-y: auto;
 }
+
+.modal-xl .modal-dialog {
+    width: 94%;
+    max-width: 1200px !important;
+  }
+.modal-xl .modal-dialog {
+    width: 94%;
+    max-width: 1200px !important;
+  }

@@ -23,6 +23,7 @@ import { GagepageComponent } from '../../../../modules/core/components/gagepage/
 import { GagePage } from '../../../../shared/interfaces/gagepage'
 import { AppComponent } from "../../../../app.component";
 import { event } from 'jquery';
+import { ElementRef } from '@angular/core';
 
 @Component({
   selector: 'tot-map',
@@ -55,7 +56,7 @@ export class MapComponent extends deepCopy implements OnInit {
   public queryModalRef;
   public e = esri;
   public show: boolean;
-
+  private selectedFeatureID;
 
   private _layersControl;
   public get LayersControl() {
@@ -79,7 +80,8 @@ export class MapComponent extends deepCopy implements OnInit {
     toastr: ToastrService, 
     navservice: NavigationService, 
     private modalService: NgbModal,
-    private nssService: NSSService) {
+    private nssService: NSSService,
+    private elementRef: ElementRef) {
     super();
     this.messanger = toastr;
     this.MapService = mapService;
@@ -108,12 +110,13 @@ export class MapComponent extends deepCopy implements OnInit {
               }
               else { 
                 const featureData = featureCollection.features[0].properties;
-                this.showGagePageModal(featureData.STA_ID);
+                this.selectedFeatureID = featureData.STA_ID;
                 const popupContent = '<h4>NWIS Stream Gages<h4><ul>' + 
                 '<li>Station Name: ' + featureData.STA_NAME + '</li>' +
                 '<li>Station ID: ' + featureData.STA_ID + '</li>' + 
                 '<li><a href="' + featureData.FeatureURL + '"target="_blank">NWIS Page</a></li>' +
-                '<li><button onclick="showGagePageModal(' + featureData.STA_ID + ')"> Open Station Info </button></li>' +
+                '<li><button class="stationDetails"> Open Station Info </button></li>' +
+                // '<li><button onclick="self.showGagePageModal(' + featureData.STA_ID + ')"> Open Station Info </button></li>' +
                 '</ul> ';
                 //this.showGagePageModal(id);
                 return popupContent;
@@ -162,6 +165,14 @@ export class MapComponent extends deepCopy implements OnInit {
     };
 
     zoomInfo.addTo(this.map);
+
+    this.map.on('popupopen', (e) => {
+        this.elementRef.nativeElement
+          .querySelector('.stationDetails')
+          .addEventListener('click', e => {
+            this.showGagePageModal(this.selectedFeatureID);
+          });
+      });
 
   }
 
