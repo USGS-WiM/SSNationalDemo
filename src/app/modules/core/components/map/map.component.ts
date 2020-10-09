@@ -167,11 +167,15 @@ export class MapComponent extends deepCopy implements OnInit {
     zoomInfo.addTo(this.map);
 
     this.map.on('popupopen', (e) => {
-        this.elementRef.nativeElement
-          .querySelector('.stationDetails')
-          .addEventListener('click', e => {
-            this.showGagePageModal(this.selectedFeatureID);
-          });
+        try {
+            this.elementRef.nativeElement
+            .querySelector('.stationDetails')
+            .addEventListener('click', e => {
+                this.showGagePageModal(this.selectedFeatureID);
+            });
+        } catch {
+            console.log('error');
+        }
       });
 
   }
@@ -296,13 +300,12 @@ export class MapComponent extends deepCopy implements OnInit {
                                 const intersectPolygons = intersect(fireUnion, basin);
                                 intArea += area(intersectPolygons) / 1000000;
                                 console.log("Intersect area: " + (area(intersectPolygons) / 1000000));
-                                this.messanger.clear();
                             } catch (error) {
-                                this.messanger.clear();
                                 console.error(error);
                                 this.sm('Error calculating burn area', 'error', '', 120000, true);
                             }
                         }
+                        this.messanger.clear();
                         popupContent += '<br><b>NIFC Burned Area in Basin:</b> ' + Number((intArea).toPrecision(3)) +
                             ' sq km (' + Number((intArea / basinArea * 100).toPrecision(3)) + ' %)';
                         popup.setContent(popupContent);

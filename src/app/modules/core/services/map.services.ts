@@ -27,7 +27,7 @@ export class MapService {
   private messanger: ToastrService;
   public FitBounds: L.LatLngBounds;
   private conf;
-  private showSource = new BehaviorSubject(false);
+  private showSource = new BehaviorSubject(true);
   currentShow = this.showSource.asObservable();
   public displayGagePage;
 
