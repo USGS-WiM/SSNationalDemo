@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit } from '@angular/core';
 import * as L from 'leaflet';
 import * as esri from 'esri-leaflet';
 import { ToastrService, IndividualConfig } from 'ngx-toastr';
 import * as messageType from '../../../../shared/messageType';
 import { MapService } from '../../services/map.services';
 import { NavigationService } from '../../services/navigationservices.service';
+import { NSSService } from '../../services/nss.service';
 import { StudyAreaService } from '../../services/studyArea.service';
 import { site } from '../../models/site';
 import { parameter } from '../../models/parameter';
@@ -18,6 +19,11 @@ import explode from '@turf/explode';
 
 import { NgbModalConfig, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import {QueryModalComponent} from '../../../../components/query/query.component';
+import { GagepageComponent } from '../../../../modules/core/components/gagepage/gagepage.component';
+import { GagePage } from '../../../../shared/interfaces/gagepage'
+import { AppComponent } from "../../../../app.component";
+import { event } from 'jquery';
+import { ElementRef } from '@angular/core';
 
 @Component({
   selector: 'tot-map',
@@ -30,6 +36,8 @@ export class MapComponent extends deepCopy implements OnInit {
   private MapService: MapService;
   private NavigationService: NavigationService;
   private StudyAreaService: StudyAreaService;
+  private NSSService: NSSService;
+  private AppComponent: AppComponent;
   private markers: L.Layer[] = [];
   private Site_reference: site;
   //private results = [];
@@ -42,9 +50,13 @@ export class MapComponent extends deepCopy implements OnInit {
   private methodType: string = null;
   public innerHeight = window.innerHeight;
   public marker: L.Marker;
+  public gageMarker: L.Marker;
   public map: L.Map;
   public selectedLayers = new L.FeatureGroup();
   public queryModalRef;
+  public e = esri;
+  public show: boolean;
+  private selectedFeatureID;
 
   private _layersControl;
   public get LayersControl() {
@@ -62,15 +74,23 @@ export class MapComponent extends deepCopy implements OnInit {
   public get Layers() {
     return this._layers;
   }
+  
 
-  constructor(mapService: MapService, toastr: ToastrService, navservice: NavigationService, private modalService: NgbModal) {
+  constructor(mapService: MapService,
+    toastr: ToastrService, 
+    navservice: NavigationService, 
+    private modalService: NgbModal,
+    private nssService: NSSService,
+    private elementRef: ElementRef) {
     super();
     this.messanger = toastr;
     this.MapService = mapService;
     this.NavigationService = navservice;
+    this.NSSService = nssService;
   }
 
   ngOnInit() {
+
     this.MapService.LayersControl.subscribe(data => {
       this._layersControl = {
         baseLayers: data.baseLayers.reduce((acc, ml) => {
@@ -82,6 +102,27 @@ export class MapComponent extends deepCopy implements OnInit {
           return acc;
         }, {})
       };
+      if (this._layersControl.overlays['StreamStats Gages']) {
+        const gageLayer = this._layersControl.overlays['StreamStats Gages'];
+        gageLayer.bindPopup((error, featureCollection) => {
+              if (error || featureCollection.features.length === 0) {
+                return false
+              }
+              else { 
+                const featureData = featureCollection.features[0].properties;
+                this.selectedFeatureID = featureData.STA_ID;
+                const popupContent = '<h4>NWIS Stream Gages<h4><ul>' + 
+                '<li>Station Name: ' + featureData.STA_NAME + '</li>' +
+                '<li>Station ID: ' + featureData.STA_ID + '</li>' + 
+                '<li><a href="' + featureData.FeatureURL + '"target="_blank">NWIS Page</a></li>' +
+                '<li><button class="stationDetails"> Open Station Info </button></li>' +
+                // '<li><button onclick="self.showGagePageModal(' + featureData.STA_ID + ')"> Open Station Info </button></li>' +
+                '</ul> ';
+                //this.showGagePageModal(id);
+                return popupContent;
+              }
+            })
+      }
     });
 
     this.MapService.LayersControl.subscribe(data => {
@@ -89,7 +130,18 @@ export class MapComponent extends deepCopy implements OnInit {
       activelayers.unshift(data.baseLayers.find((l: any) => l.visible).layer);
       this._layers = activelayers;
     });
-  }
+
+    this.MapService.currentShow.subscribe(show => this.show = show)
+
+  }  //End OnInit
+
+  public showGagePageModal(id) {
+    const gagePageForm: GagePage = {
+      show: true,
+      gageCode: id
+    }
+    this.nssService.setGagePageModal(gagePageForm);
+  };
 
   public onZoomChange(zoom: number) {
     this.MapService.CurrentZoomLevel = zoom;
@@ -99,7 +151,7 @@ export class MapComponent extends deepCopy implements OnInit {
 
   public onMapReady(map: L.Map) {
     this.map = map;
-    this.selectedLayers.addTo(map);
+    this.selectedLayers.addTo(map)
     L.control.scale().addTo(map);
     const zoomInfo = new (L.Control.extend({
         options: {position: 'bottomleft'}
@@ -113,7 +165,21 @@ export class MapComponent extends deepCopy implements OnInit {
     };
 
     zoomInfo.addTo(this.map);
+
+    this.map.on('popupopen', (e) => {
+        try {
+            this.elementRef.nativeElement
+            .querySelector('.stationDetails')
+            .addEventListener('click', e => {
+                this.showGagePageModal(this.selectedFeatureID);
+            });
+        } catch {
+            console.log('error');
+        }
+      });
+
   }
+
 
   // region "Helper methods"
   private sm(msg: string, mType: string = messageType.INFO, title?: string, timeout?: number, disableTimeout?: boolean) {
@@ -129,17 +195,21 @@ export class MapComponent extends deepCopy implements OnInit {
       this.messanger.show(msg, title, options, mType);
     } catch (e) {}
   }
-  // endregion
+  // endregion 
 
   public onMouseClick(event) {
-    this.queryModalRef = this.modalService.open(QueryModalComponent);
-    this.queryModalRef.componentInstance.emitService.subscribe((result) => {
-      if (result.query === 'query-basin') {
-        this.queryBasin(event, result.startYear, result.endYear);
-      } else if (result.query === 'query-fire') {
-        this.selectFirePerims(event);
-      }
-    });
+    if (this.show) {
+      this.queryModalRef = this.modalService.open(QueryModalComponent);
+      this.queryModalRef.componentInstance.emitService.subscribe((result) => {
+        if (result.query === 'query-basin') {
+          this.queryBasin(event, result.startYear, result.endYear);
+        } else if (result.query === 'query-fire') {
+          this.selectFirePerims(event);
+        }
+      });
+    } if (!this.show) {
+      return false;
+    } 
   }
 
   public queryBasin(event, startYear, endYear) {
@@ -230,13 +300,12 @@ export class MapComponent extends deepCopy implements OnInit {
                                 const intersectPolygons = intersect(fireUnion, basin);
                                 intArea += area(intersectPolygons) / 1000000;
                                 console.log("Intersect area: " + (area(intersectPolygons) / 1000000));
-                                this.messanger.clear();
                             } catch (error) {
-                                this.messanger.clear();
                                 console.error(error);
                                 this.sm('Error calculating burn area', 'error', '', 120000, true);
                             }
                         }
+                        this.messanger.clear();
                         popupContent += '<br><b>NIFC Burned Area in Basin:</b> ' + Number((intArea).toPrecision(3)) +
                             ' sq km (' + Number((intArea / basinArea * 100).toPrecision(3)) + ' %)';
                         popup.setContent(popupContent);

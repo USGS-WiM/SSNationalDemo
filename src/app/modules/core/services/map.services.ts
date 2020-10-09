@@ -1,10 +1,15 @@
-import { Injectable, ElementRef, EventEmitter, Injector } from '@angular/core';
+import { Injectable, OnInit, ElementRef, EventEmitter, Injector } from '@angular/core';
 import * as L from 'leaflet';
 import { Map } from 'leaflet';
 import * as esri from 'esri-leaflet';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, of, Subject } from 'rxjs';
+import { BehaviorSubject, Observable, of, Subject } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
+//import { MapComponent } from '../components/map/map.component';
+import { GagePage } from '../../../shared/interfaces/gagepage';
+import { Station } from '../../../shared/interfaces/station';
+import { NSSService } from '../services/nss.service';
+import { map } from "rxjs/operators";
 import "leaflet/dist/images/marker-shadow.png";
 import "leaflet/dist/images/marker-icon-2x.png";
 
@@ -22,8 +27,11 @@ export class MapService {
   private messanger: ToastrService;
   public FitBounds: L.LatLngBounds;
   private conf;
+  private showSource = new BehaviorSubject(true);
+  currentShow = this.showSource.asObservable();
+  public displayGagePage;
 
-  constructor(private http: HttpClient, toastr: ToastrService) {
+  constructor(private http: HttpClient, toastr: ToastrService, nssService: NSSService) {
     this.Options = {
       zoom: 5,
       center: L.latLng(39.828, -98.5795)
@@ -46,6 +54,10 @@ export class MapService {
     });
 
     this.CurrentZoomLevel = this.Options.zoom;
+  }
+
+  changeShow(show: boolean) {
+    this.showSource.next(show)
   }
 
   public AddLayer(point: any) {
@@ -109,7 +121,9 @@ export class MapService {
           // https://esri.github.io/esri-leaflet/api-reference/layers/dynamic-map-layer.html
           options = ml.layerOptions;
           options.url = ml.url;
-          return esri.dynamicMapLayer(options);
+          const dynamicLayer = esri.dynamicMapLayer(options);
+          return dynamicLayer;
+          
         case 'agsTile':
           options = ml.layerOptions;
           options.url = ml.url;
@@ -130,8 +144,28 @@ export class MapService {
     } catch (error) {
       console.error(ml.name + ' failed to load mapllayer', error);
       return null;
-    }
+    };
+    
   }
+
+
+
+  // // -+-+-+-+-+-+-+-+-+ show gagepage -+-+-+-+-+-+-+-+
+  //   private _showHideGagePageModal: Subject<GagePage> = new Subject<GagePage>();
+  //   public setGagePageModal(val: GagePage) {
+  //       this._showHideGagePageModal.next(val);
+  //   }
+  //   // show gagepage modal in the mainview
+  //   // public get showGagePageModal(): any {
+  //   //     return this._showHideGagePageModal.asObservable();
+  //   // }
+
+  //   // get gage page info
+  //   public getGagePageInfo(code) {
+  //       return this.http
+  //       .get('https://test.streamstats.usgs.gov/gagestatsservices/stations/' + code)
+  //       .pipe(map(res => <Station>res));
+  //   }
 
   public addToMap(lay, layerName: any) {
     const newlayer = {
@@ -168,3 +202,5 @@ export class MapService {
     this.addToMap(layer, name);
   }
 }
+
+
