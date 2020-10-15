@@ -320,7 +320,7 @@ export class MapComponent extends deepCopy implements OnInit {
   public selectFirePerims(event) {
       const shownFields = ['INCIDENTNAME', 'COMMENTS', 'GISACRES', 'FIRE_YEAR', 'CREATEDATE', 'ACRES',
         'AGENCY', 'SOURCE', 'INCIDENT', 'FIRE_ID', 'FIRE_NAME', 'YEAR', 'STARTMONTH', 'STARTDAY', 'FIRE_TYPE'];
-      this.sm('Querying layers, please wait...', 'wait', '', 60000);
+      this.sm('Querying layers, please wait...', 'wait', '', 180000);
       let count = 0;
       this.selectedLayers.clearLayers();
       Object.keys(this._layersControl.overlays).forEach(key => {
@@ -338,6 +338,7 @@ export class MapComponent extends deepCopy implements OnInit {
                               console.log("Output Geojson: " + data);
                               const layer = L.geoJSON(data);
                               this.selectedLayers.addLayer(layer);
+                              this.MapService.FitBounds = layer.getBounds();
                           }));
                         }
                         results.features.forEach(feat => {
@@ -375,6 +376,7 @@ export class MapComponent extends deepCopy implements OnInit {
                               console.log("Output Geojson: " + data);
                               const layer = L.geoJSON(data);
                               this.selectedLayers.addLayer(layer);
+                              this.MapService.FitBounds = layer.getBounds();
                           }));
                         }
                         results.features.forEach(feat => {

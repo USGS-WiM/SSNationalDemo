@@ -80,7 +80,7 @@ export class MapService {
   public Trace(geojson: any) {
     console.log("Input GeoJSON: " + geojson);
     const httpOptions = { headers: new HttpHeaders({ 'Content-Type': 'application/json' }) };
-    return this.http.post<any>('http://firehydrology.streamstats.usgs.gov:8000/trace', geojson, httpOptions);
+    return this.http.post<any>('https://firehydrology.streamstats.usgs.gov/trace', geojson, httpOptions);
   }
 
   public ToggleLayerVisibility(layername: string) {
