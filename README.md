@@ -1,5 +1,9 @@
 ![WiM](wimlogo.png)
 
+## Update, 2022-12-12: Deprecated
+
+### This repo is part of a discontinued effort and is no longer being actively maintained. Please see [StreamStats-National](https://github.com/USGS-WiM/streamstats-national) for latest efforts related to the national StreamStats app.
+
 
 # SS National Demo
 
